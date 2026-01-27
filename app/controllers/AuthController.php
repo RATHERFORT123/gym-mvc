@@ -70,5 +70,86 @@ class AuthController extends Controller
         header("Location: " . BASE_URL . "/auth/login");
         exit;
 
+        
     }
+    public function sendOtp()
+{
+    $otp = rand(100000, 999999);
+
+    $_SESSION['register'] = [
+        'name' => $_POST['name'],
+        'email' => $_POST['email'],
+        'password' => password_hash($_POST['password'], PASSWORD_DEFAULT),
+        'role' => $_POST['role'],
+        'otp' => $otp,
+        'expiry' => time() + 300
+    ];
+
+    $_SESSION['otp_sent'] = true;
+
+    Mailer::send(
+        $_POST['email'],
+        "Gym Registration OTP",
+        "<h3>Your OTP: $otp</h3><p>Valid for 5 minutes</p>"
+    );
+
+    $this->view('auth/register', ['success' => 'OTP sent to your email']);
+}
+
+public function verifyOtp()
+{
+    $error = null;
+
+    if ($_POST['otp'] == $_SESSION['register']['otp']
+        && time() <= $_SESSION['register']['expiry']) {
+
+        $this->model('User')->create([
+            'name' => $_SESSION['register']['name'],
+            'email' => $_SESSION['register']['email'],
+            'password' => $_SESSION['register']['password'],
+            'role' => $_SESSION['register']['role'],
+            'is_verified' => 1
+        ]);
+
+        unset($_SESSION['register'], $_SESSION['otp_sent']);
+
+        header("Location: " . BASE_URL . "/auth/login");
+        exit;
+    }
+
+    $error = "Invalid or expired OTP";
+    $this->view('auth/register', ['error' => $error]);
+}
+public function resendOtp()
+{
+    if (!isset($_SESSION['register'])) {
+        header("Location: " . BASE_URL . "/auth/register");
+        exit;
+    }
+
+    $otp = rand(100000, 999999);
+
+    $_SESSION['register']['otp'] = $otp;
+    $_SESSION['register']['expiry'] = time() + 300;
+
+    Mailer::send(
+        $_SESSION['register']['email'],
+        "Gym Registration OTP (Resent)",
+        "<h3>Your OTP: $otp</h3><p>Valid for 5 minutes</p>"
+    );
+
+    $_SESSION['otp_sent'] = true;
+
+    $this->view('auth/register', ['success' => 'New OTP sent to your email']);
+}
+public function resetRegister()
+{
+    // Clear registration session data
+    unset($_SESSION['register'], $_SESSION['otp_sent']);
+
+    // Go back to register page
+    header("Location: " . BASE_URL . "/auth/register");
+    exit;
+}
+
 }
