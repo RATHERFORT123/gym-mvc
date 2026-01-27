@@ -2,46 +2,58 @@
 
 class AuthController extends Controller
 {
+    // 🔐 Login
     public function login()
     {
+        // ✅ Always define error
+        $error = null;
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-            $email = $_POST['email'];
-            $password = $_POST['password'];
+            $email    = $_POST['email'] ?? '';
+            $password = $_POST['password'] ?? '';
 
             $userModel = $this->model('User');
             $user = $userModel->findByEmail($email);
 
             if ($user && password_verify($password, $user['password'])) {
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['role'] = $user['role'];
 
+                // ✅ Set session
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['role']    = $user['role'];
+
+                // ✅ Role-based redirect
                 if ($user['role'] === 'admin') {
                     header("Location: /admin/dashboard");
                 } else {
+                    // user + faculty
                     header("Location: /user/dashboard");
                 }
                 exit;
             }
 
-            $error = "Invalid login";
+            // ❌ Invalid login
+            $error = "Invalid email or password";
         }
 
-        $this->view('auth/login', compact('error'));
+        // ✅ Load view safely
+        $this->view('auth/login', ['error' => $error]);
     }
 
+    // 📝 Register
     public function register()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $data = [
-                'name' => $_POST['name'],
-                'email' => $_POST['email'],
-                'password' => password_hash($_POST['password'], PASSWORD_DEFAULT),
-                'role' => $_POST['role'] // user | faculty
+                'name'     => $_POST['name'] ?? '',
+                'email'    => $_POST['email'] ?? '',
+                'password' => password_hash($_POST['password'] ?? '', PASSWORD_DEFAULT),
+                'role'     => $_POST['role'] ?? 'user' // user | faculty
             ];
 
             $this->model('User')->create($data);
+
             header("Location: /auth/login");
             exit;
         }
@@ -49,9 +61,11 @@ class AuthController extends Controller
         $this->view('auth/register');
     }
 
+    // 🚪 Logout
     public function logout()
     {
         session_destroy();
         header("Location: /auth/login");
+        exit;
     }
 }

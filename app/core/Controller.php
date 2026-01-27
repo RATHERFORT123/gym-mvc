@@ -5,12 +5,25 @@ class Controller
     protected function view($view, $data = [])
     {
         extract($data);
-        require "../app/views/$view.php";
+
+        $path = __DIR__ . '/../views/' . $view . '.php';
+
+        if (!file_exists($path)) {
+            die("View not found: " . $view);
+        }
+
+        require $path;
     }
 
     protected function model($model)
     {
-        require_once "../app/models/$model.php";
+        $path = __DIR__ . '/../models/' . $model . '.php';
+
+        if (!file_exists($path)) {
+            die("Model not found: " . $model);
+        }
+
+        require_once $path;
         return new $model;
     }
 }
