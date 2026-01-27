@@ -24,10 +24,11 @@ class AuthController extends Controller
 
                 // ✅ Role-based redirect
                 if ($user['role'] === 'admin') {
-                    header("Location: /admin/dashboard");
+                    header("Location: " . BASE_URL . "/admin/dashboard");
                 } else {
                     // user + faculty
-                    header("Location: /user/dashboard");
+                    header("Location: " . BASE_URL . "/user/dashboard");
+
                 }
                 exit;
             }
@@ -37,7 +38,7 @@ class AuthController extends Controller
         }
 
         // ✅ Load view safely
-        $this->view('auth/login', ['error' => $error]);
+        $this->view('/auth/login', ['error' => $error]);
     }
 
     // 📝 Register
@@ -54,8 +55,9 @@ class AuthController extends Controller
 
             $this->model('User')->create($data);
 
-            header("Location: /auth/login");
+            header("Location: " . BASE_URL . "/auth/login");
             exit;
+
         }
 
         $this->view('auth/register');
@@ -65,7 +67,8 @@ class AuthController extends Controller
     public function logout()
     {
         session_destroy();
-        header("Location: /auth/login");
+        header("Location: " . BASE_URL . "/auth/login");
         exit;
+
     }
 }

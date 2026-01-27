@@ -7,6 +7,7 @@
 
 <nav>
     <a href="/user/dashboard">Dashboard</a> |
-    <a href="/auth/logout">Logout</a>
+    <a href="<?= BASE_URL ?>/auth/logout">Logout</a>
+
 </nav>
 <hr>
