@@ -8,7 +8,7 @@ class Auth
     public static function check()
     {
         if (!isset($_SESSION['user_id'])) {
-            header("Location: /auth/login");
+            header("Location: " . BASE_URL . "/auth/login");
             exit;
         }
     }
