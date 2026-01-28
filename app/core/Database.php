@@ -49,6 +49,7 @@ class Database
             email VARCHAR(100) UNIQUE,
             password VARCHAR(255),
             role ENUM('admin','user','faculty') DEFAULT 'user',
+            is_verified BOOLEAN default 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )";
         self::$pdo->exec($sql);
