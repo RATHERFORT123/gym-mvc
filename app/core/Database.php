@@ -30,10 +30,10 @@ class Database
                 [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
             );
 
-            // 4️⃣ Create tables
+            // 4️⃣ Create tables & migrations
             self::createTables();
 
-            // 5️⃣ Create admin
+            // 5️⃣ Create default admin
             self::createAdmin();
         }
 
@@ -42,6 +42,9 @@ class Database
 
     private static function createTables()
     {
+        // ===============================
+        // 🧱 BASE TABLE CREATION
+        // ===============================
         $sql = "
         CREATE TABLE IF NOT EXISTS users (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -49,26 +52,39 @@ class Database
             email VARCHAR(100) UNIQUE,
             password VARCHAR(255),
             role ENUM('admin','user','faculty') DEFAULT 'user',
-            is_verified BOOLEAN default 0,
-            is_active BOOLEAN default 1,
+            is_verified BOOLEAN DEFAULT 0,
+            is_active BOOLEAN DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-            
+
         CREATE TABLE IF NOT EXISTS user_profiles (
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT NOT NULL,
+
+            -- Student fields
             first_name VARCHAR(50),
             last_name VARCHAR(50),
             mobile_number VARCHAR(15),
-            college_year ENUM('1', '2', '3', '4'),
+            college_year ENUM('1','2','3','4'),
             semester INT,
             branch VARCHAR(50),
             height_cm DECIMAL(5,2),
             weight_kg DECIMAL(5,2),
             fitness_goal VARCHAR(50),
+
+            -- Faculty fields (added via migration safety below)
+            department VARCHAR(100) NULL,
+            position VARCHAR(100) NULL,
+            subject_expert VARCHAR(150) NULL,
+            qualification VARCHAR(150) NULL,
+            experience_years INT NULL,
+
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+
+            FOREIGN KEY (user_id)
+                REFERENCES users(id)
+                ON DELETE CASCADE
         );
 
         CREATE TABLE IF NOT EXISTS user_plans (
@@ -99,7 +115,6 @@ class Database
 
             user_id INT NOT NULL,
             plan_id INT NOT NULL,
-
             amount DECIMAL(10,2) NOT NULL,
 
             payment_method ENUM('upi') DEFAULT 'upi',
@@ -114,16 +129,11 @@ class Database
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-            FOREIGN KEY (user_id)
-                REFERENCES users(id)
-                ON DELETE CASCADE,
-
-            FOREIGN KEY (plan_id)
-                REFERENCES user_plans(id)
-                ON DELETE CASCADE
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (plan_id) REFERENCES user_plans(id) ON DELETE CASCADE
         );
 
-       CREATE TABLE IF NOT EXISTS user_subscriptions (
+        CREATE TABLE IF NOT EXISTS user_subscriptions (
             id INT AUTO_INCREMENT PRIMARY KEY,
 
             user_id INT NOT NULL,
@@ -138,36 +148,47 @@ class Database
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-            FOREIGN KEY (user_id)
-                REFERENCES users(id)
-                ON DELETE CASCADE,
-
-            FOREIGN KEY (plan_id)
-                REFERENCES user_plans(id)
-                ON DELETE CASCADE,
-
-            FOREIGN KEY (payment_id)
-                REFERENCES payments(id)
-                ON DELETE CASCADE
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (plan_id) REFERENCES user_plans(id) ON DELETE CASCADE,
+            FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE CASCADE
         );
-
-
-
         ";
+
         self::$pdo->exec($sql);
 
-        // Update: Add is_active column if not exists
+        // ===============================
+        // 🔁 SAFE MIGRATIONS (ALTER TABLE)
+        // ===============================
+
+        // Faculty columns (for existing databases)
         try {
-            self::$pdo->exec("ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT 1 AFTER is_verified");
+            self::$pdo->exec("
+                ALTER TABLE user_profiles
+                ADD COLUMN department VARCHAR(100) NULL AFTER branch,
+                ADD COLUMN position VARCHAR(100) NULL AFTER department,
+                ADD COLUMN subject_expert VARCHAR(150) NULL AFTER position,
+                ADD COLUMN qualification VARCHAR(150) NULL AFTER subject_expert,
+                ADD COLUMN experience_years INT NULL AFTER qualification
+            ");
         } catch (Exception $e) {
-            // Column likely exists
+            // Columns already exist → ignore
+        }
+
+        // Ensure users.is_active exists (legacy safety)
+        try {
+            self::$pdo->exec("
+                ALTER TABLE users
+                ADD COLUMN is_active BOOLEAN DEFAULT 1 AFTER is_verified
+            ");
+        } catch (Exception $e) {
+            // Column already exists → ignore
         }
     }
 
     private static function createAdmin()
     {
         $stmt = self::$pdo->prepare(
-            "SELECT COUNT(*) FROM users WHERE role='admin'"
+            "SELECT COUNT(*) FROM users WHERE role = 'admin'"
         );
         $stmt->execute();
 

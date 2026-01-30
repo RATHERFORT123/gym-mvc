@@ -45,40 +45,132 @@ class User extends Model
         $stmt->execute([$userId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+public function updateProfile($userId, $data, $role)
+{
+    $stmt = $this->db->prepare("SELECT id FROM user_profiles WHERE user_id = ?");
+    $stmt->execute([$userId]);
+    $exists = $stmt->fetch();
 
-    public function updateProfile($userId, $data)
-    {
-        // Check if profile exists
-        $stmt = $this->db->prepare("SELECT id FROM user_profiles WHERE user_id = ?");
-        $stmt->execute([$userId]);
-        $exists = $stmt->fetch();
+    // =========================
+    // FACULTY PROFILE
+    // =========================
+    if ($role === 'faculty') {
 
         if ($exists) {
-            $sql = "UPDATE user_profiles SET 
-                    first_name = ?, last_name = ?, mobile_number = ?, 
-                    college_year = ?, semester = ?, branch = ?, 
-                    height_cm = ?, weight_kg = ?, fitness_goal = ?
+            $sql = "UPDATE user_profiles SET
+                        first_name = ?,
+                        last_name = ?,
+                        mobile_number = ?,
+                        height_cm = ?,
+                        weight_kg = ?,
+                        fitness_goal = ?,
+                        department = ?,
+                        position = ?,
+                        subject_expert = ?,
+                        qualification = ?,
+                        experience_years = ?
                     WHERE user_id = ?";
         } else {
-            $sql = "INSERT INTO user_profiles 
-                    (first_name, last_name, mobile_number, college_year, semester, branch, height_cm, weight_kg, fitness_goal, user_id) 
+            $sql = "INSERT INTO user_profiles
+                    (first_name, last_name, mobile_number,
+                     height_cm, weight_kg, fitness_goal,
+                     department, position, subject_expert,
+                     qualification, experience_years, user_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        }
+
+        $params = [
+            $data['first_name'] ?? null,
+            $data['last_name'] ?? null,
+            $data['mobile_number'] ?? null,
+            $data['height'] ?? null,
+            $data['weight'] ?? null,
+            $data['fitness_goal'] ?? null,
+            $data['department'] ?? null,
+            $data['position'] ?? null,
+            $data['subject_expert'] ?? null,
+            $data['qualification'] ?? null,
+            $data['experience_years'] ?? null,
+            $userId
+        ];
+    }
+
+    // =========================
+    // USER / STUDENT PROFILE
+    // =========================
+    else {
+
+        if ($exists) {
+            $sql = "UPDATE user_profiles SET
+                        first_name = ?,
+                        last_name = ?,
+                        mobile_number = ?,
+                        college_year = ?,
+                        semester = ?,
+                        branch = ?,
+                        height_cm = ?,
+                        weight_kg = ?,
+                        fitness_goal = ?
+                    WHERE user_id = ?";
+        } else {
+            $sql = "INSERT INTO user_profiles
+                    (first_name, last_name, mobile_number,
+                     college_year, semester, branch,
+                     height_cm, weight_kg, fitness_goal, user_id)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         }
 
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
-            $data['first_name'],
-            $data['last_name'],
-            $data['mobile_number'],
-            $data['college_year'],
-            $data['semester'],
-            $data['branch'],
-            $data['height'],
-            $data['weight'],
-            $data['fitness_goal'],
+        $params = [
+            $data['first_name'] ?? null,
+            $data['last_name'] ?? null,
+            $data['mobile_number'] ?? null,
+            $data['college_year'] ?? null,
+            $data['semester'] ?? null,
+            $data['branch'] ?? null,
+            $data['height'] ?? null,
+            $data['weight'] ?? null,
+            $data['fitness_goal'] ?? null,
             $userId
-        ]);
+        ];
     }
+
+    $stmt = $this->db->prepare($sql);
+    return $stmt->execute($params);
+}
+
+    // public function updateProfile($userId, $data)
+    // {
+    //     // Check if profile exists
+    //     $stmt = $this->db->prepare("SELECT id FROM user_profiles WHERE user_id = ?");
+    //     $stmt->execute([$userId]);
+    //     $exists = $stmt->fetch();
+
+    //     if ($exists) {
+    //         $sql = "UPDATE user_profiles SET 
+    //                 first_name = ?, last_name = ?, mobile_number = ?, 
+    //                 college_year = ?, semester = ?, branch = ?, 
+    //                 height_cm = ?, weight_kg = ?, fitness_goal = ?
+    //                 WHERE user_id = ?";
+    //     } else {
+    //         $sql = "INSERT INTO user_profiles 
+    //                 (first_name, last_name, mobile_number, college_year, semester, branch, height_cm, weight_kg, fitness_goal, user_id) 
+    //                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    //     }
+
+    //     $stmt = $this->db->prepare($sql);
+    //     return $stmt->execute([
+    //         $data['first_name'],
+    //         $data['last_name'],
+    //         $data['mobile_number'],
+    //         $data['college_year'],
+    //         $data['semester'],
+    //         $data['branch'],
+    //         $data['height'],
+    //         $data['weight'],
+    //         $data['fitness_goal'],
+    //         $userId
+    //     ]);
+    // }
 
     public function isProfileComplete($userId)
     {
