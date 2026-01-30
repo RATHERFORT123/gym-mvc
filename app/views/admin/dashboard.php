@@ -18,16 +18,20 @@
         </div>
 
         <!-- Manage Faculty (Placeholder) -->
-        <div class="col-md-4">
-            <div class="card shadow h-100 border-secondary" style="opacity: 0.6;">
-                <div class="card-body text-center">
-                    <h1 class="display-4 text-secondary">👨‍🏫</h1>
-                    <h5 class="card-title">Manage Faculty</h5>
-                    <p class="card-text text-muted">Faculty specific management.</p>
-                    <button class="btn btn-secondary" disabled>Coming Soon</button>
-                </div>
-            </div>
+       <div class="col-md-4">
+    <div class="card shadow h-100">
+        <div class="card-body text-center">
+            <h1 class="display-4 text-secondary">👨‍🏫</h1>
+            <h5 class="card-title">Manage Faculty</h5>
+            <p class="card-text text-muted">View and manage faculty members.</p>
+            <a href="<?= BASE_URL ?>/admin/faculty" class="btn btn-secondary">
+                Go to Faculty
+            </a>
         </div>
+    </div>
+</div>
+
+
 
         <!-- Reports (Placeholder) -->
         <div class="col-md-4">
@@ -44,4 +48,32 @@
     </div>
 </div>
 
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-center shadow">
+            <div class="card-body">
+                <h5>Total Users</h5>
+                <h2><?= $stats['total_users'] ?></h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-center shadow">
+            <div class="card-body">
+                <h5>Total Faculty</h5>
+                <h2><?= $stats['total_faculty'] ?></h2>
+            </div>
+        </div>
+    </div>  
+
+    <div class="col-md-4">
+        <div class="card text-center shadow">
+            <div class="card-body">
+                <h5>Today Attendance</h5>
+                <h2><?= $stats['today_attendance'] ?></h2>
+            </div>
+        </div>
+    </div>
+</div>
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

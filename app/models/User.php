@@ -138,39 +138,21 @@ public function updateProfile($userId, $data, $role)
     return $stmt->execute($params);
 }
 
-    // public function updateProfile($userId, $data)
-    // {
-    //     // Check if profile exists
-    //     $stmt = $this->db->prepare("SELECT id FROM user_profiles WHERE user_id = ?");
-    //     $stmt->execute([$userId]);
-    //     $exists = $stmt->fetch();
+   public function getUsersByRole($role)
+{
+    $sql = "SELECT u.id, u.name, u.email, u.role, u.is_active,
+                   p.fitness_goal, p.height_cm, p.weight_kg,
+                   p.department
+            FROM users u
+            LEFT JOIN user_profiles p ON u.id = p.user_id
+            WHERE u.role = ?
+            ORDER BY u.created_at DESC";
 
-    //     if ($exists) {
-    //         $sql = "UPDATE user_profiles SET 
-    //                 first_name = ?, last_name = ?, mobile_number = ?, 
-    //                 college_year = ?, semester = ?, branch = ?, 
-    //                 height_cm = ?, weight_kg = ?, fitness_goal = ?
-    //                 WHERE user_id = ?";
-    //     } else {
-    //         $sql = "INSERT INTO user_profiles 
-    //                 (first_name, last_name, mobile_number, college_year, semester, branch, height_cm, weight_kg, fitness_goal, user_id) 
-    //                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    //     }
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([$role]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
-    //     $stmt = $this->db->prepare($sql);
-    //     return $stmt->execute([
-    //         $data['first_name'],
-    //         $data['last_name'],
-    //         $data['mobile_number'],
-    //         $data['college_year'],
-    //         $data['semester'],
-    //         $data['branch'],
-    //         $data['height'],
-    //         $data['weight'],
-    //         $data['fitness_goal'],
-    //         $userId
-    //     ]);
-    // }
 
     public function isProfileComplete($userId)
     {
@@ -213,5 +195,21 @@ public function updateProfile($userId, $data, $role)
         $stmt = $this->db->prepare("UPDATE users SET is_active = ? WHERE id = ?");
         return $stmt->execute([$status, $id]);
     }
+public function getById($id)
+{
+    $stmt = $this->db->prepare(
+        "SELECT id, name, email, role FROM users WHERE id = ?"
+    );
+    $stmt->execute([$id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+public function countByRole($role)
+{
+    $stmt = $this->db->prepare(
+        "SELECT COUNT(*) FROM users WHERE role = ?"
+    );
+    $stmt->execute([$role]);
+    return (int) $stmt->fetchColumn();
+}
 
 }

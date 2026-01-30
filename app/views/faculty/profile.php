@@ -28,7 +28,7 @@
 
                 <!-- PERSONAL DETAILS -->
                 <h5 class="text-primary">Personal Details</h5>
-                <p><strong>Mobile:</strong> <?= $profile['mobile_number'] ?? '-' ?></p>
+                <p><strong>Mobile:</strong> <?= $profile['mobile_number'] ?? '-' ?></p> 
 
                 <hr>
 

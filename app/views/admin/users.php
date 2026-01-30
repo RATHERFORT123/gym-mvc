@@ -54,21 +54,31 @@
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="<?= BASE_URL ?>/admin/assignPlan/<?= $user['id'] ?>" class="btn btn-primary" title="Assign Plan">
+                                        <a href="<?= BASE_URL ?>/admin/assignPlan/<?= $user['id'] ?>" class="btn btn-primary btn-sm mb-3" title="Assign Plan">
                                             📋 Plan
                                         </a>
+                                        <!-- <a href="<?= BASE_URL ?>/admin/attendance/<?= $user['id'] ?>"
+   class="btn btn-info btn-sm mb-3"
+   title="View Attendance">
+    🗓️ Attendance
+</a> -->
+<a href="<?= BASE_URL ?>/admin/attendanceCalendar/<?= $user['id'] ?>"
+   class="btn btn-info btn-sm mb-3">
+    📅 View
+</a>
+
                                         
                                         <?php if ($user['is_active']): ?>
-                                            <a href="<?= BASE_URL ?>/admin/toggleStatus/<?= $user['id'] ?>?status=0" class="btn btn-warning" onclick="return confirm('Deactivate this user?')">
+                                            <a href="<?= BASE_URL ?>/admin/toggleStatus/<?= $user['id'] ?>?status=0" class="btn btn-warning btn-sm mb-3" onclick="return confirm('Deactivate this user?')">
                                                 🚫 Block
                                             </a>
                                         <?php else: ?>
-                                            <a href="<?= BASE_URL ?>/admin/toggleStatus/<?= $user['id'] ?>?status=1" class="btn btn-success">
+                                            <a href="<?= BASE_URL ?>/admin/toggleStatus/<?= $user['id'] ?>?status=1" class="btn btn-success btn-sm mb-3">
                                                 ✅ Activate
                                             </a>
                                         <?php endif; ?>
 
-                                        <a href="<?= BASE_URL ?>/admin/deleteUser/<?= $user['id'] ?>" class="btn btn-danger" onclick="return confirm('Are you sure?')">
+                                        <a href="<?= BASE_URL ?>/admin/deleteUser/<?= $user['id'] ?>" class="btn btn-danger btn-sm mb-3" onclick="return confirm('Are you sure?')">
                                             🗑️
                                         </a>
                                     </div>
