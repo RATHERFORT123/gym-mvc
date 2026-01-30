@@ -17,14 +17,26 @@
             </div>
         </div>
 
-        <!-- Manage Faculty (Placeholder) -->
+        <!-- Manage Plans -->
         <div class="col-md-4">
-            <div class="card shadow h-100 border-secondary" style="opacity: 0.6;">
+            <div class="card shadow h-100">
                 <div class="card-body text-center">
-                    <h1 class="display-4 text-secondary">👨‍🏫</h1>
-                    <h5 class="card-title">Manage Faculty</h5>
-                    <p class="card-text text-muted">Faculty specific management.</p>
-                    <button class="btn btn-secondary" disabled>Coming Soon</button>
+                    <h1 class="display-4 text-success">💳</h1>
+                    <h5 class="card-title">Manage Plans & Prices</h5>
+                    <p class="card-text text-muted">Edit plan prices for users and faculty.</p>
+                    <a href="<?= BASE_URL ?>/admin/plans" class="btn btn-success">Manage Plans</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports (Placeholder) -->
+        <div class="col-md-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <h1 class="display-4 text-warning">💰</h1>
+                    <h5 class="card-title">Manage Payments</h5>
+                    <p class="card-text text-muted">Verify transactions and check payer UPI IDs.</p>
+                    <a href="<?= BASE_URL ?>/admin/payments" class="btn btn-warning">Go to Payments</a>
                 </div>
             </div>
         </div>

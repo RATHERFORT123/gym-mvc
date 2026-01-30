@@ -16,7 +16,21 @@ class UserController extends Controller
             }
         }
 
-        $this->view('user/dashboard', ['showProfileAlert' => $showProfileAlert]);
+        // Fetch current subscription and days left
+        $planModel = $this->model('Plan');
+        $currentPlan = $planModel->getCurrentSubscription($_SESSION['user_id']);
+        $daysLeft = null;
+        if ($currentPlan && !empty($currentPlan['end_date'])) {
+            $end = strtotime($currentPlan['end_date']);
+            $today = strtotime(date('Y-m-d'));
+            $daysLeft = (int) floor(($end - $today) / 86400);
+        }
+
+        $this->view('user/dashboard', [
+            'showProfileAlert' => $showProfileAlert,
+            'currentPlan' => $currentPlan,
+            'daysLeft' => $daysLeft
+        ]);
     }
 
     public function dismissAlert() 

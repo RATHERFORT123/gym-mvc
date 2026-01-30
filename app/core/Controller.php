@@ -13,8 +13,16 @@ class Controller
                     $_SESSION['user_id'],
                     date('Y-m-d')
                 );
+
+            // Check if user has an active subscription to allow attendance marking
+            require_once __DIR__ . '/../models/Plan.php';
+            $planModel = new Plan();
+            $currentSub = $planModel->getCurrentSubscription($_SESSION['user_id']);
+
+            $data['attendanceAllowed'] = ($currentSub && !empty($currentSub['end_date']) && strtotime($currentSub['end_date']) >= strtotime(date('Y-m-d')));
         } else {
             $data['attendanceMarkedToday'] = true;
+            $data['attendanceAllowed'] = false;
         }
 
         extract($data);

@@ -10,6 +10,14 @@ class AttendanceController extends Controller
         $role   = $_SESSION['role'];
         $today  = date('Y-m-d');
 
+        // Ensure user has an active subscription
+        $planModel = $this->model('Plan');
+        $currentSub = $planModel->getCurrentSubscription($userId);
+        if (!$currentSub || empty($currentSub['end_date']) || strtotime($currentSub['end_date']) < strtotime($today)) {
+            echo json_encode(['status' => 'no_subscription']);
+            return;
+        }
+
         $attendanceModel = $this->model('Attendance');
 
         if ($attendanceModel->isMarked($userId, $today)) {

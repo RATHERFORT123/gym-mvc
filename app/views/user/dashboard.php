@@ -2,6 +2,35 @@
 
 <h2>User Dashboard</h2>
 
+<!-- Subscription Alerts moved from plans page -->
+<?php if (!empty($currentPlan)): ?>
+    <?php if (is_int($daysLeft) && $daysLeft <= 2 && $daysLeft >= 0): ?>
+        <div class="alert alert-warning">
+            <strong>Heads up:</strong> Your plan <em><?= htmlspecialchars($currentPlan['plan_name']) ?></em> expires in <strong><?= $daysLeft === 0 ? 'today' : $daysLeft . ' day' . ($daysLeft > 1 ? 's' : '') ?></strong>.
+            <a class="btn btn-sm btn-success ms-3" href="<?= BASE_URL ?>/payment/index?plan=<?= urlencode($currentPlan['plan_key']) ?>">Renew now</a>
+        </div>
+    <?php elseif (is_int($daysLeft) && $daysLeft < 0): ?>
+        <div class="alert alert-danger">
+            Your previous plan <em><?= htmlspecialchars($currentPlan['plan_name']) ?></em> has expired. Please purchase a new plan.
+            <a class="btn btn-sm btn-success ms-3" href="<?= BASE_URL ?>/payment/index">View Plans</a>
+        </div>
+    <?php endif; ?>
+
+    <div class="card mb-4">
+        <div class="card-body d-flex justify-content-between">
+            <div>
+                <strong>Current Plan:</strong> <?= htmlspecialchars($currentPlan['plan_name']) ?>
+                <div class="text-white">Expires: <?= htmlspecialchars($currentPlan['end_date'] ?? 'N/A') ?></div>
+            </div>
+        </div>
+    </div>
+<?php else: ?>
+    <div class="alert alert-warning text-center">
+        <strong>No Active Subscription</strong> — You don't have an active plan. Choose a plan to get started.
+        <a class="btn btn-sm btn-success ms-3" href="<?= BASE_URL ?>/payment/index">View Plans</a>
+    </div>
+<?php endif; ?>
+
 <ul>
     <li><a href="<?= BASE_URL ?>/profile/index">Profile</a></li>
     <li><a href="<?= BASE_URL ?>/plan/index">Diet and Workout Plan</a></li>
