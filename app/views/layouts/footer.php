@@ -1,13 +1,19 @@
-<footer class="text-center">
+</main>
+
+<footer class="text-center bg-dark py-6 mt-auto">
     <div class="container">
         <h4 class="text-white mb-3">SGSIT GYM</h4>
-        <p class="text-muted mb-4">Empowering students with strength and fitness.</p>
+        <p class="text-white mb-4">Empowering students with strength and fitness.</p>
+
         <div class="mb-3">
-             <span class="text-muted mx-2">Instagram</span>
-             <span class="text-muted mx-2">Facebook</span>
-             <span class="text-muted mx-2">Twitter</span>
+            <span class="text-white mx-2">Instagram</span>
+            <span class="text-white mx-2">Facebook</span>
+            <span class="text-white mx-2">Twitter</span>
         </div>
-        <small class="text-muted">&copy; <?= date('Y') ?> SGSIT Indore. All rights reserved.</small>
+
+        <small class="text-white">
+            &copy; <?= date('Y') ?> SGSIT Indore. All rights reserved.
+        </small>
     </div>
 </footer>
 

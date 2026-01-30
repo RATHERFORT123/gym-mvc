@@ -83,6 +83,76 @@ class Database
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS attendance (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            role ENUM('user','faculty') NOT NULL,
+            attendance_date DATE NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY unique_attendance (user_id, attendance_date),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS payments (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+
+            user_id INT NOT NULL,
+            plan_id INT NOT NULL,
+
+            amount DECIMAL(10,2) NOT NULL,
+
+            payment_method ENUM('upi') DEFAULT 'upi',
+            upi_id VARCHAR(100) NOT NULL,
+            utr_number VARCHAR(50) DEFAULT NULL,
+
+            status ENUM('pending','verified','failed') DEFAULT 'pending',
+
+            paid_at DATETIME DEFAULT NULL,
+            verified_at DATETIME DEFAULT NULL,
+
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+            FOREIGN KEY (user_id)
+                REFERENCES users(id)
+                ON DELETE CASCADE,
+
+            FOREIGN KEY (plan_id)
+                REFERENCES user_plans(id)
+                ON DELETE CASCADE
+        );
+
+       CREATE TABLE IF NOT EXISTS user_subscriptions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+
+            user_id INT NOT NULL,
+            plan_id INT NOT NULL,
+            payment_id INT NOT NULL,
+
+            start_date DATE NOT NULL,
+            end_date DATE NOT NULL,
+
+            status ENUM('active','expired','cancelled') DEFAULT 'active',
+
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+            FOREIGN KEY (user_id)
+                REFERENCES users(id)
+                ON DELETE CASCADE,
+
+            FOREIGN KEY (plan_id)
+                REFERENCES user_plans(id)
+                ON DELETE CASCADE,
+
+            FOREIGN KEY (payment_id)
+                REFERENCES payments(id)
+                ON DELETE CASCADE
+        );
+
+
+
         ";
         self::$pdo->exec($sql);
 

@@ -9,7 +9,29 @@
     <!-- Custom CSS -->
     <link href="<?= BASE_URL ?>/public/css/style.css" rel="stylesheet">
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
+
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="<?= BASE_URL ?>/home/index">
+        ⚡ SGSIT GYM
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        ...
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Spacer for fixed navbar -->
+<div style="margin-top: 80px;"></div>
+
+<!-- 🔥 MAIN CONTENT START -->
+<main class="flex-grow-1 container py-4">
 
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
   <div class="container">
@@ -39,6 +61,24 @@
                 <li class="nav-item">
                     <a class="nav-link" href="<?= BASE_URL ?>/profile/index">My Profile</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link text-warning fw-semibold"
+                       href="<?= BASE_URL ?>/subscription/index">
+                        Membership
+                    </a>
+                </li>
+                <?php if (isset($_SESSION['role']) && $_SESSION['role'] !== 'admin'): ?>
+                <?php if (!$attendanceMarkedToday): ?>
+                    <li class="nav-item">
+                        <button
+                            id="markAttendanceBtn"
+                            class="btn btn-success btn-sm mt-1">
+                            Mark Attendance
+                        </button>
+                    </li>
+                <?php endif; ?>
+            <?php endif; ?>
+
             <?php endif; ?>
 
             <li class="nav-item ms-2">
@@ -60,3 +100,23 @@
 
 <!-- Spacer for fixed navbar -->
 <div style="margin-top: 80px;"></div>
+
+<script>
+document.getElementById('markAttendanceBtn')?.addEventListener('click', function () {
+    fetch('<?= BASE_URL ?>/attendance/mark', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Attendance marked successfully!');
+            document.getElementById('markAttendanceBtn').remove();
+        } else {
+            alert('Attendance already marked today.');
+        }
+    });
+});
+</script>

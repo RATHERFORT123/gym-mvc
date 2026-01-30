@@ -70,7 +70,7 @@
                             <button type="submit" class="btn btn-primary btn-lg">Send OTP</button>
                         </div>
 
-                        <div class="text-center text-muted">
+                        <div class="text-center text-white">
                             Already have an account? 
                             <a href="<?= BASE_URL ?>/auth/login" class="text-primary text-decoration-none">Login Here</a>
                         </div>

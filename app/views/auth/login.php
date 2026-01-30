@@ -26,8 +26,8 @@
                     <div class="mb-4">
                         <label class="form-label">Password</label>
                         <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
-                        <div class="text-end mt-2">
-                             <a href="<?= BASE_URL ?>/auth/forgotPassword" class="text-decoration-none small text-muted">Forgot Password?</a>
+                        <div class="text-end mt-2 text-white">
+                             <a href="<?= BASE_URL ?>/auth/forgotPassword" class="text-decoration-none small">Forgot Password?</a>
                         </div>
                     </div>
 
@@ -36,9 +36,9 @@
                             Login
                         </button>
                     </div>
-                    
-                    <div class="text-center text-muted">
-                        Don't have an account? 
+
+                    <div class="text-center text-white">
+                        <p class="mb-0"> Don't have an account? </p>
                         <a href="<?= BASE_URL ?>/auth/register" class="text-primary text-decoration-none">Register Here</a>
                     </div>
 

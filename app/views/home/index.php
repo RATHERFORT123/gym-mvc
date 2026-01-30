@@ -19,7 +19,7 @@
     <div class="row text-center mb-5">
         <div class="col-md-8 mx-auto">
             <h2 class="display-5 mb-3">Why Choose Us?</h2>
-            <p class="text-muted">We provide state-of-the-art facilities right inside the campus.</p>
+            <p class="text-white">We provide state-of-the-art facilities right inside the campus.</p>
         </div>
     </div>
 
@@ -29,7 +29,7 @@
                 <div class="card-body">
                     <div class="feature-icon">💪</div>
                     <h4>Modern Equipment</h4>
-                    <p class="text-muted">Train with the latest cardio and strength training equipment maintained for peak performance.</p>
+                    <p class="text-white">Train with the latest cardio and strength training equipment maintained for peak performance.</p>
                 </div>
             </div>
         </div>
@@ -38,7 +38,7 @@
                 <div class="card-body">
                     <div class="feature-icon">🥗</div>
                     <h4>Diet Plans</h4>
-                    <p class="text-muted">Get personalized diet charts based on your BMI and fitness goals (Weight Loss, Muscle Gain).</p>
+                    <p class="text-white">Get personalized diet charts based on your BMI and fitness goals (Weight Loss, Muscle Gain).</p>
                 </div>
             </div>
         </div>
@@ -47,7 +47,7 @@
                 <div class="card-body">
                     <div class="feature-icon">🎓</div>
                     <h4>Expert Guidance</h4>
-                    <p class="text-muted">Certified trainers to guide students and faculty through their fitness journey.</p>
+                    <p class="text-white">Certified trainers to guide students and faculty through their fitness journey.</p>
                 </div>
             </div>
         </div>
@@ -63,18 +63,18 @@
             </div>
             <div class="col-md-6 ps-md-5 mt-4 mt-md-0">
                 <h2 class="mb-4">Fitness Meets Academics</h2>
-                <p class="text-muted mb-4">
+                <p class="mb-4 text-white">
                     SGSIT Gym is dedicated to promoting a healthy lifestyle among future engineers and leaders. 
                     Located centrally within the campus, we offer flexible timings that fit your class schedule.
                 </p>
                 <div class="row">
                     <div class="col-6 mb-3">
                         <h3 class="text-white">500+</h3>
-                        <small class="text-muted">Active Students</small>
+                        <small class="text-white">Active Students</small>
                     </div>
                     <div class="col-6 mb-3">
                         <h3 class="text-white">10+</h3>
-                        <small class="text-muted">Certified Trainers</small>
+                        <small class="text-white">Certified Trainers</small>
                     </div>
                 </div>
                 <a href="<?= BASE_URL ?>/auth/login" class="btn btn-outline-light mt-3">Member Login</a>

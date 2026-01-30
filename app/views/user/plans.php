@@ -6,36 +6,49 @@
         
         <?php if ($plan): ?>
             <div class="card shadow mb-4">
-                <div class="card-header bg-dark text-white d-flex justify-content-between">
-                    <span><strong>Plan:</strong> <?= htmlspecialchars($plan['plan_name'] ?? 'Custom Plan') ?></span>
-                    <small>Assigned by: <?= htmlspecialchars($plan['assigned_by']) ?></small>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <!-- Workout Section -->
-                        <div class="col-md-6 border-end border-secondary">
-                            <h4 class="text-warning mb-3">🏋️ Workout Plan</h4>
-                            <div class="p-3 bg-dark rounded text-light" style="min-height: 200px; white-space: pre-wrap;">
-                                <?= nl2br(htmlspecialchars($plan['workout_plan'])) ?>
-                            </div>
-                        </div>
+    <div class="card-header bg-dark text-white d-flex justify-content-between">
+        <span>
+            <strong>Plan:</strong> <?= htmlspecialchars($plan['plan_name'] ?? 'Custom Plan') ?>
+        </span>
+        <small>
+            Assigned by: <?= htmlspecialchars($plan['assigned_by']) ?>
+        </small>
+    </div>
 
-                        <!-- Diet Section -->
-                        <div class="col-md-6">
-                            <h4 class="text-success mb-3">🥗 Diet Plan</h4>
-                             <div class="p-3 bg-dark rounded text-light" style="min-height: 200px; white-space: pre-wrap;">
-                                <?= nl2br(htmlspecialchars($plan['diet_plan'])) ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer text-muted text-center">
-                    Plan Validity: 
-                    <?= $plan['start_date'] ? date('d M Y', strtotime($plan['start_date'])) : 'N/A' ?> 
-                    - 
-                    <?= $plan['end_date'] ? date('d M Y', strtotime($plan['end_date'])) : 'N/A' ?>
+    <div class="card-body">
+        <div class="row">
+            
+            <!-- Workout Section -->
+            <div class="col-md-6 border-end border-secondary">
+                <h4 class="text-warning mb-3">🏋️ Workout Plan</h4>
+
+                <div class="p-3 bg-dark rounded text-light text-start"
+                     style="min-height: 200px;">
+                    <?= nl2br(htmlspecialchars($plan['workout_plan'])) ?>
                 </div>
             </div>
+
+            <!-- Diet Section -->
+            <div class="col-md-6">
+                <h4 class="text-success mb-3">🥗 Diet Plan</h4>
+
+                <div class="p-3 bg-dark rounded text-light text-start"
+                     style="min-height: 200px;">
+                    <?= nl2br(htmlspecialchars($plan['diet_plan'])) ?>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="card-footer text-white text-center">
+        Plan Validity:
+        <?= $plan['start_date'] ? date('d M Y', strtotime($plan['start_date'])) : 'N/A' ?>
+        -
+        <?= $plan['end_date'] ? date('d M Y', strtotime($plan['end_date'])) : 'N/A' ?>
+    </div>
+</div>
+
 
         <?php else: ?>
             <div class="alert alert-info text-center p-5">
