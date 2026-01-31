@@ -184,3 +184,97 @@ footer {
     color: var(--primary-color);
     margin-bottom: 15px;
 }
+
+/* Subscription plan card flip + responsive tweaks */
+.plan-card {
+    margin: 0.75rem;
+}
+
+.card-inner {
+    position: relative;
+    width: 100%;
+    min-height: 350px;
+    transform-style: preserve-3d;
+    transition: transform .6s ease;
+}
+
+/* Slider Enhancements */
+#plansContainer {
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    /* Hide scrollbar for Chrome/Safari/Firefox */
+    -ms-overflow-style: none;
+}
+
+#plansContainer::-webkit-scrollbar {
+    display: none;
+}
+
+.plan-card {
+    scroll-snap-align: center;
+    flex: 0 0 auto;
+}
+
+.plan-card .card {
+    perspective: 1200px;
+    border-radius: 12px;
+    overflow: visible;
+}
+
+.plan-card .card-front,
+.plan-card .card-back {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    min-height: 100%;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.plan-card .card-front {
+    transform: rotateY(0deg);
+    z-index: 2;
+}
+
+.plan-card .card-back {
+    transform: rotateY(180deg);
+    -webkit-transform: rotateY(180deg);
+    z-index: 1;
+    display: none;
+}
+
+.plan-card.flipped .card-inner {
+    transform: rotateY(180deg);
+    -webkit-transform: rotateY(180deg);
+}
+
+.plan-card.flipped .card-back {
+    display: flex;
+}
+
+.plan-card.flipped .card-front {
+    display: none;
+}
+
+/* Hide via bootstrap utility when needed (d-none used) */
+@media (max-width: 768px) {
+    .card-inner {
+        min-height: 520px;
+    }
+
+    .plan-card {
+        width: 100% !important;
+    }
+}
+
+/* Small visual polish */
+.plan-card .qr-img {
+    border: 6px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    background: #fff;
+}

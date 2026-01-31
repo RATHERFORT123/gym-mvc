@@ -62,22 +62,27 @@
                     <a class="nav-link" href="<?= BASE_URL ?>/profile/index">My Profile</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-warning fw-semibold"
-                       href="<?= BASE_URL ?>/subscription/index">
+                    <a class="nav-link text-warning fw-semibold" href="<?= BASE_URL ?>/payment/index">
                         Membership
                     </a>
                 </li>
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] !== 'admin'): ?>
-                <?php if (!$attendanceMarkedToday): ?>
-                    <li class="nav-item">
-                        <button
-                            id="markAttendanceBtn"
-                            class="btn btn-success btn-sm mt-1">
-                            Mark Attendance
-                        </button>
-                    </li>
+                    <?php if ($attendanceAllowed): ?>
+                        <?php if (!$attendanceMarkedToday): ?>
+                            <li class="nav-item">
+                                <button
+                                    id="markAttendanceBtn"
+                                    class="btn btn-success btn-sm mt-1">
+                                    Mark Attendance
+                                </button>
+                            </li>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <li class="nav-item">
+                            <button class="btn btn-secondary btn-sm mt-1" disabled title="No active subscription">Mark Attendance</button>
+                        </li>
+                    <?php endif; ?>
                 <?php endif; ?>
-            <?php endif; ?>
 
             <?php endif; ?>
 
@@ -114,8 +119,13 @@ document.getElementById('markAttendanceBtn')?.addEventListener('click', function
         if (data.status === 'success') {
             alert('Attendance marked successfully!');
             document.getElementById('markAttendanceBtn').remove();
-        } else {
+        } else if (data.status === 'no_subscription') {
+            alert('You need an active subscription to mark attendance.');
+            window.location = '<?= BASE_URL ?>/payment/index';
+        } else if (data.status === 'already_marked') {
             alert('Attendance already marked today.');
+        } else {
+            alert('Unable to mark attendance.');
         }
     });
 });

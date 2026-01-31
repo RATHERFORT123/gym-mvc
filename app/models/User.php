@@ -184,6 +184,53 @@ public function updateProfile($userId, $data, $role)
         return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getPaginatedUsers($limit, $offset, $search = '')
+    {
+        $sql = "
+            SELECT u.id, u.name, u.email, u.role, u.is_active, 
+                   p.fitness_goal, p.height_cm, p.weight_kg 
+            FROM users u 
+            LEFT JOIN user_profiles p ON u.id = p.user_id 
+            WHERE u.role != 'admin'
+        ";
+
+        $params = [];
+        if (!empty($search)) {
+            $sql .= " AND (u.name LIKE ? OR u.email LIKE ?)";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+        }
+
+        $sql .= " ORDER BY u.created_at DESC LIMIT ? OFFSET ?";
+        
+        $stmt = $this->db->prepare($sql);
+        
+        $paramCount = count($params);
+        for ($i = 0; $i < $paramCount; $i++) {
+            $stmt->bindValue($i + 1, $params[$i]);
+        }
+        
+        $stmt->bindValue($paramCount + 1, (int)$limit, PDO::PARAM_INT);
+        $stmt->bindValue($paramCount + 2, (int)$offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getTotalUserCount($search = '')
+    {
+        $sql = "SELECT COUNT(*) FROM users u WHERE u.role != 'admin'";
+        $params = [];
+        
+        if (!empty($search)) {
+            $sql .= " AND (u.name LIKE ? OR u.email LIKE ?)";
+            $params = ["%$search%", "%$search%"];
+        }
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchColumn();
+    }
+
     public function delete($id)
     {
         $stmt = $this->db->prepare("DELETE FROM users WHERE id = ?");
