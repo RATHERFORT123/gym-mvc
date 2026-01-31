@@ -1,91 +1,86 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Register</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
+<?php include __DIR__ . '/../layouts/header.php'; ?>
 
-<body class="container mt-5">
+<div class="row justify-content-center" style="margin-top: 80px; margin-bottom: 50px;">
+    <div class="col-md-6">
 
-<div class="row justify-content-center">
-<div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header text-center bg-primary text-white">
+                 <h3 class="mb-0">Create Account</h3>
+            </div>
+            
+            <div class="card-body p-4">
 
-<h3 class="text-center mb-4">User Registration</h3>
+                <?php if (!empty($error)): ?>
+                    <div class="alert alert-danger">
+                        <?= htmlspecialchars($error) ?>
+                    </div>
+                <?php endif; ?>
 
-<?php if (!empty($error)): ?>
-    <div class="alert alert-danger"><?= $error ?></div>
-<?php endif; ?>
+                <?php if (!empty($success)): ?>
+                    <div class="alert alert-success">
+                        <?= htmlspecialchars($success) ?>
+                    </div>
+                <?php endif; ?>
 
-<?php if (!empty($success)): ?>
-    <div class="alert alert-success"><?= $success ?></div>
-<?php endif; ?>
+                <?php if (isset($_SESSION['otp_sent'])): ?>
+                    <!-- OTP VERIFICATION FORM -->
+                     <form method="post" action="<?= BASE_URL ?>/auth/verifyOtp">
+                        <div class="mb-3">
+                            <label class="form-label">Enter OTP sent to your email</label>
+                            <input type="number" name="otp" class="form-control text-center" style="font-size: 1.5rem; letter-spacing: 5px;" placeholder="######" required>
+                        </div>
+                         <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">Verify OTP</button>
+                        </div>
+                    </form>
+                    
+                    <div class="d-flex justify-content-between mt-3">
+                        <a href="<?= BASE_URL ?>/auth/resendOtp" class="btn btn-link btn-sm">Resend OTP</a>
+                        <a href="<?= BASE_URL ?>/auth/resetRegister" class="btn btn-link btn-sm text-danger">Change Email</a>
+                    </div>
 
-<?php if (empty($_SESSION['otp_sent'])): ?>
+                <?php else: ?>
+                    <!-- REGISTRATION FORM -->
+                    <form method="post" action="<?= BASE_URL ?>/auth/sendOtp">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" name="name" class="form-control" required>
+                        </div>
 
-<form method="post" action="<?= BASE_URL ?>/auth/sendOtp">
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" name="email" class="form-control" required>
+                        </div>
 
-    <div class="mb-3">
-        <label>Name</label>
-        <input class="form-control" name="name" required>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">I am a:</label>
+                            <select name="role" class="form-select">
+                                <option value="user">Student</option>
+                                <option value="faculty">Faculty</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg">Send OTP</button>
+                        </div>
+
+                        <div class="text-center text-white">
+                            Already have an account? 
+                            <a href="<?= BASE_URL ?>/auth/login" class="text-primary text-decoration-none">Login Here</a>
+                        </div>
+                    </form>
+                <?php endif; ?>
+
+            </div>
+        </div>
+
     </div>
-
-    <div class="mb-3">
-        <label>Email</label>
-        <input type="email" class="form-control" name="email" required>
-    </div>
-
-    <div class="mb-3">
-        <label>Password</label>
-        <input type="password" class="form-control" name="password" required>
-    </div>
-
-    <div class="mb-3">
-        <label>Role</label>
-        <select class="form-control" name="role">
-            <option value="user">User</option>
-            <option value="faculty">Faculty</option>
-        </select>
-    </div>
-
-    <button class="btn btn-primary w-100">Send OTP</button>
-</form>
-
-<?php else: ?>
-
-<form method="post" action="<?= BASE_URL ?>/auth/verifyOtp">
-
-    <div class="mb-3">
-        <label>Enter OTP</label>
-        <input class="form-control" name="otp" required>
-    </div>
-
-    <button class="btn btn-success w-100">Verify OTP</button>
-</form>
-
-<div class="text-center mt-3">
-    <a href="<?= BASE_URL ?>/auth/resendOtp">Resend OTP</a> |
-    <a href="<?= BASE_URL ?>/auth/resetRegister">Change Email</a>
 </div>
 
-<?php endif; ?>
-
-<hr>
-
-<div class="text-center">
-    Already have an account?
-    <a href="<?= BASE_URL ?>/auth/login">Login</a>
-</div>
-
-</div>
-</div>
-
-</body>
-<script>
-document.querySelectorAll('form').forEach(f => {
-    f.addEventListener('submit', () => {
-        f.querySelector('button').disabled = true;
-    });
-});
-</script>
-
-</html>
+<?php include __DIR__ . '/../layouts/footer.php'; ?>

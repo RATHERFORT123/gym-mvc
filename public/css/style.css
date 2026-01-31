@@ -1,0 +1,280 @@
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Poppins:wght@300;400;600;800&display=swap');
+
+:root {
+    --primary-color: #ff5722;
+    /* Energetic Orange */
+    --secondary-color: #212529;
+    /* Dark Grey */
+    --bg-dark: #121212;
+    --bg-card: #1e1e1e;
+    --text-light: #f8f9fa;
+    --text-muted: #adb5bd;
+    --accent-glow: rgba(255, 87, 34, 0.4);
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 5px;
+}
+
+/* Navbar */
+.navbar {
+    background: rgba(18, 18, 18, 0.95) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary-color) !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.nav-link {
+    color: var(--text-light) !important;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.nav-link:hover {
+    color: var(--primary-color) !important;
+    transform: translateY(-2px);
+}
+
+/* Hero Section */
+.hero-section {
+    position: relative;
+    height: 85vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center;
+    text-align: center;
+}
+
+.hero-content h1 {
+    font-size: 4rem;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.hero-content span {
+    color: var(--primary-color);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border: none;
+    padding: 12px 30px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px var(--accent-glow);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #e64a19;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px var(--accent-glow);
+}
+
+/* Cards (Glassmorphism) */
+.card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+    border-radius: 15px;
+    transition: transform 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-10px);
+    border-color: var(--primary-color);
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Form Controls */
+.form-control,
+.form-select {
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    color: var(--text-light);
+    padding: 12px;
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: #333;
+    border-color: var(--primary-color);
+    color: var(--text-light);
+    box-shadow: 0 0 0 0.25rem rgba(255, 87, 34, 0.25);
+}
+
+.form-control::placeholder {
+    color: #adb5bd;
+    /* light gray */
+    opacity: 1;
+    /* important for Firefox */
+}
+
+/* For textarea specifically (optional) */
+textarea.form-control::placeholder {
+    color: #adb5bd;
+}
+
+/* Tables */
+.table {
+    color: var(--text-light);
+    border-color: #444;
+}
+
+.table-light {
+    background-color: #2a2a2a;
+    color: var(--text-light);
+}
+
+/* Footer */
+footer {
+    background-color: #000;
+    padding: 40px 0;
+    margin-top: 50px;
+    border-top: 2px solid var(--primary-color);
+}
+
+/* Feature Icons */
+.feature-icon {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+/* Subscription plan card flip + responsive tweaks */
+.plan-card {
+    margin: 0.75rem;
+}
+
+.card-inner {
+    position: relative;
+    width: 100%;
+    min-height: 350px;
+    transform-style: preserve-3d;
+    transition: transform .6s ease;
+}
+
+/* Slider Enhancements */
+#plansContainer {
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    /* Hide scrollbar for Chrome/Safari/Firefox */
+    -ms-overflow-style: none;
+}
+
+#plansContainer::-webkit-scrollbar {
+    display: none;
+}
+
+.plan-card {
+    scroll-snap-align: center;
+    flex: 0 0 auto;
+}
+
+.plan-card .card {
+    perspective: 1200px;
+    border-radius: 12px;
+    overflow: visible;
+}
+
+.plan-card .card-front,
+.plan-card .card-back {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    min-height: 100%;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.plan-card .card-front {
+    transform: rotateY(0deg);
+    z-index: 2;
+}
+
+.plan-card .card-back {
+    transform: rotateY(180deg);
+    -webkit-transform: rotateY(180deg);
+    z-index: 1;
+    display: none;
+}
+
+.plan-card.flipped .card-inner {
+    transform: rotateY(180deg);
+    -webkit-transform: rotateY(180deg);
+}
+
+.plan-card.flipped .card-back {
+    display: flex;
+}
+
+.plan-card.flipped .card-front {
+    display: none;
+}
+
+/* Hide via bootstrap utility when needed (d-none used) */
+@media (max-width: 768px) {
+    .card-inner {
+        min-height: 520px;
+    }
+
+    .plan-card {
+        width: 100% !important;
+    }
+}
+
+/* Small visual polish */
+.plan-card .qr-img {
+    border: 6px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    background: #fff;
+}

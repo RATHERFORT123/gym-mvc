@@ -4,11 +4,13 @@ class Router
 {
     public function dispatch()
     {
-        $url = $_GET['url'] ?? 'auth/login';
+        $url = $_GET['url'] ?? 'home/index';
         $url = explode('/', trim($url, '/'));
 
         $controllerName = ucfirst($url[0]) . 'Controller';
-        $method = $url[1] ?? 'login';
+        $method = $url[1] ?? 'index';
+
+        unset($url[0], $url[1]);
 
         $controllerPath = __DIR__ . '/../controllers/' . $controllerName . '.php';
 
@@ -29,6 +31,10 @@ class Router
             die("Method not found: $method");
         }
 
-        $controller->$method();
+        // Get params
+        $params = $url ? array_values($url) : [];
+
+        // Call method with params
+        call_user_func_array([$controller, $method], $params);
     }
 }

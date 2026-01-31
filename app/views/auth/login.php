@@ -1,50 +1,52 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Gym Management Login</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
+<?php include __DIR__ . '/../layouts/header.php'; ?>
 
-<body class="container mt-5">
-
-<div class="row justify-content-center">
+<div class="row justify-content-center" style="margin-top: 100px; margin-bottom: 50px;">
     <div class="col-md-5">
 
-        <h3 class="text-center mb-4">Gym Management Login</h3>
-
-        <?php if (!empty($error)): ?>
-            <div class="alert alert-danger">
-                <?= htmlspecialchars($error) ?>
+        <div class="card shadow">
+            <div class="card-header text-center bg-primary text-white">
+                 <h3 class="mb-0">Member Login</h3>
             </div>
-        <?php endif; ?>
+            
+            <div class="card-body p-4">
+                
+                <?php if (!empty($error)): ?>
+                    <div class="alert alert-danger">
+                        <?= htmlspecialchars($error) ?>
+                    </div>
+                <?php endif; ?>
 
-        <form method="post">
+                <form method="post">
 
-            <div class="mb-3">
-                <label class="form-label">Email</label>
-                <input type="email" name="email" class="form-control" required>
+                    <div class="mb-4">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" name="email" class="form-control" placeholder="Enter your email" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
+                        <div class="text-end mt-2 text-white">
+                             <a href="<?= BASE_URL ?>/auth/forgotPassword" class="text-decoration-none small">Forgot Password?</a>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            Login
+                        </button>
+                    </div>
+
+                    <div class="text-center text-white">
+                        <p class="mb-0"> Don't have an account? </p>
+                        <a href="<?= BASE_URL ?>/auth/register" class="text-primary text-decoration-none">Register Here</a>
+                    </div>
+
+                </form>
             </div>
-
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-                <input type="password" name="password" class="form-control" required>
-            </div>
-
-            <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary">
-                    Login
-                </button>
-
-                <!-- ✅ REGISTER BUTTON -->
-                <a href="<?= BASE_URL ?>/auth/register" class="btn btn-outline-secondary">
-                    Register
-                </a>
-            </div>
-
-        </form>
+        </div>
 
     </div>
 </div>
 
-</body>
-</html>
+<?php include __DIR__ . '/../layouts/footer.php'; ?>
