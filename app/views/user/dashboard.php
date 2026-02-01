@@ -4,30 +4,52 @@
 
 <!-- Subscription Alerts moved from plans page -->
 <?php if (!empty($currentPlan)): ?>
+    
     <?php if (is_int($daysLeft) && $daysLeft <= 2 && $daysLeft >= 0): ?>
-        <div class="alert alert-warning">
+        <div class="alert alert-warning border-0 shadow-sm">
+            <i class="fas fa-hourglass-half me-2"></i>
             <strong>Heads up:</strong> Your plan <em><?= htmlspecialchars($currentPlan['plan_name']) ?></em> expires in <strong><?= $daysLeft === 0 ? 'today' : $daysLeft . ' day' . ($daysLeft > 1 ? 's' : '') ?></strong>.
             <a class="btn btn-sm btn-success ms-3" href="<?= BASE_URL ?>/payment/index?plan=<?= urlencode($currentPlan['plan_key']) ?>">Renew now</a>
         </div>
-    <?php elseif (is_int($daysLeft) && $daysLeft < 0): ?>
-        <div class="alert alert-danger">
-            Your previous plan <em><?= htmlspecialchars($currentPlan['plan_name']) ?></em> has expired. Please purchase a new plan.
+
+    <?php elseif (is_int($daysLeft) && $daysLeft < 0 && $currentPlan['payment_status'] !== 'pending'): ?>
+        <div class="alert alert-danger border-0 shadow-sm">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            Your previous plan <em><?= htmlspecialchars($currentPlan['plan_name']) ?></em> has expired.
             <a class="btn btn-sm btn-success ms-3" href="<?= BASE_URL ?>/payment/index">View Plans</a>
         </div>
     <?php endif; ?>
 
-    <div class="card mb-4">
-        <div class="card-body d-flex justify-content-between">
-            <div>
-                <strong>Current Plan:</strong> <?= htmlspecialchars($currentPlan['plan_name']) ?>
-                <div class="text-white">Expires: <?= htmlspecialchars($currentPlan['end_date'] ?? 'N/A') ?></div>
+    <?php if ($currentPlan['payment_status'] == 'verified'): ?>
+        <div class="card mb-4 bg-dark border-warning shadow-lg">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge bg-success mb-2">Active Plan</span>
+                    <h5 class="text-warning mb-0"><?= htmlspecialchars($currentPlan['plan_name']) ?></h5>
+                    <div class="small text-light">Valid until: <?= date('M d, Y', strtotime($currentPlan['end_date'])) ?></div>
+                </div>
+                <div class="text-end">
+                    <h4 class="text-white mb-0"><?= $daysLeft ?></h4>
+                    <div class="small text-muted">Days Left</div>
+                </div>
             </div>
         </div>
-    </div>
+
+    <?php elseif ($currentPlan['payment_status'] == 'pending'): ?>
+        <div class="alert alert-info border-0 shadow-sm d-flex align-items-center">
+            <div class="spinner-grow spinner-grow-sm text-info me-3" role="status"></div>
+            <div>
+                <strong>Payment Under Review:</strong> We've received your transaction details for the <em><?= htmlspecialchars($currentPlan['plan_name']) ?></em>. 
+                Our team is verifying the UTR. Your access will be restored shortly.
+            </div>
+        </div>
+    <?php endif; ?>
+
 <?php else: ?>
-    <div class="alert alert-warning text-center">
-        <strong>No Active Subscription</strong> — You don't have an active plan. Choose a plan to get started.
-        <a class="btn btn-sm btn-success ms-3" href="<?= BASE_URL ?>/payment/index">View Plans</a>
+    <div class="alert alert-secondary text-center border-0 shadow-sm py-4">
+        <h5 class="mb-2">No Active Subscription</h5>
+        <p class="text-muted small">Choose a plan to access workouts, diets, and attendance tracking.</p>
+        <a class="btn btn-warning" href="<?= BASE_URL ?>/payment/index">Browse Plans</a>
     </div>
 <?php endif; ?>
 

@@ -7,7 +7,7 @@ vendor/
 .env
 .env.*
 
-copomser.lock
+composer.lock
 
 # Composer PHAR
 composer.phar

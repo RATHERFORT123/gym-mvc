@@ -15,11 +15,14 @@ class Controller
                 );
 
             // Check if user has an active subscription to allow attendance marking
-            require_once __DIR__ . '/../models/Plan.php';
-            $planModel = new Plan();
+            require_once __DIR__ . '/../models/Payment.php';
+            $planModel = new Payment();
             $currentSub = $planModel->getCurrentSubscription($_SESSION['user_id']);
+            $latestPayment = $planModel->getLatestPayment($_SESSION['user_id']);
 
-            $data['attendanceAllowed'] = ($currentSub && !empty($currentSub['end_date']) && strtotime($currentSub['end_date']) >= strtotime(date('Y-m-d')));
+            $isVerified = ($latestPayment && $latestPayment['status'] === 'verified');
+
+            $data['attendanceAllowed'] = ($currentSub && !empty($currentSub['end_date']) && strtotime($currentSub['end_date']) >= strtotime(date('Y-m-d')) && $isVerified);
         } else {
             $data['attendanceMarkedToday'] = true;
             $data['attendanceAllowed'] = false;

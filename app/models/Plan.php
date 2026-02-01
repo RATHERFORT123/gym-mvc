@@ -2,12 +2,6 @@
 
 class Plan extends Model
 {
-    public function getUserPlan($userId)
-    {
-        $stmt = $this->db->prepare("SELECT * FROM user_plans WHERE user_id = ? ORDER BY created_at DESC LIMIT 1");
-        $stmt->execute([$userId]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
 
     public function createPlan($data)
     {
@@ -92,12 +86,19 @@ class Plan extends Model
     public function getCurrentSubscription($userId)
     {
         $stmt = $this->db->prepare(
-            "SELECT us.*, pm.name AS plan_name, pm.plan_key
-             FROM user_subscriptions us
-             JOIN plans_master pm ON pm.id = COALESCE(us.plan_master_id, us.plan_id)
-             WHERE us.user_id = ? AND us.status = 'active'
-             ORDER BY us.end_date DESC
-             LIMIT 1"
+            "SELECT 
+                us.*,
+                pm.name AS plan_name,
+                pm.plan_key,
+                p.status AS payment_status,
+                p.status
+            FROM user_subscriptions us
+            JOIN plans_master pm ON pm.id = us.plan_id
+            JOIN payments p ON p.id = us.payment_id
+            WHERE us.user_id = ?
+            AND us.status = 'active'
+            ORDER BY us.end_date DESC
+            LIMIT 1"
         );
         $stmt->execute([$userId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);

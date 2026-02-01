@@ -24,7 +24,7 @@
                     </thead>
                     <tbody>
                         <?php if (empty($payments)): ?>
-                            <tr><td colspan="8" class="text-center text-muted">No payments found</td></tr>
+                            <tr><td colspan="8" class="text-center text-white">No payments found</td></tr>
                         <?php else: ?>
                             <?php foreach ($payments as $p): ?>
                                 <tr>

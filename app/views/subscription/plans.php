@@ -40,7 +40,7 @@
                                 <h4 class="text-warning mb-2"><?= htmlspecialchars($p['name']) ?></h4>
                                 <div class="mb-3 display-6">₹<?= number_format($displayPrice) ?></div>
                                 <p class="text-white">Access workouts, diet plans and gym attendance</p>
-                                <button class="btn btn-success subscribe-btn" data-plan="<?= htmlspecialchars($key) ?>">Subscribe</button>
+                                <div class="btn btn-success subscribe-btn" data-plan="<?= htmlspecialchars($key) ?>" style="cursor:pointer;">Subscribe</div>
                             </div>
 
                             <div class="card-back card-body p-3 text-center">
@@ -71,14 +71,17 @@
 
                                     <form method="post" action="<?= BASE_URL ?>/payment/verify" class="verify-form">
                                         <input type="hidden" name="payment_id" value="">
+                                        <input type="hidden" name="plan_id" value="">
+                                        <input type="hidden" name="plan_key" value="">
                                         <div class="mb-2">
                                             <input class="form-control form-control-sm" name="payer_upi" placeholder="Your UPI ID (Optional)">
                                         </div>
                                         <div class="mb-2">
                                             <input class="form-control form-control-sm" name="utr" placeholder="Enter transaction id (UTR/TID)" required>
+                                            <span class="utr-error text-danger small" style="display:none; margin-top:4px;"></span>
                                         </div>
                                         <div class="d-flex justify-content-center gap-2">
-                                            <button class="btn btn-primary btn-sm">I Paid</button>
+                                            <button type="button" class="btn btn-primary btn-sm submit-utr-btn">I Paid</button>
                                             <button type="button" class="btn btn-outline-light btn-sm cancel-btn">Cancel</button>
                                         </div>
                                     </form>
@@ -127,28 +130,68 @@
             document.querySelectorAll('.slider-arrow').forEach(a => a.style.display = 'flex');
         }
 
+        // Debug: Listen for all form submissions to catch rogue ones
+        window.addEventListener('submit', function(e) {
+            console.log('Form submission caught from:', e.target);
+            // If it's not the verify-form, it shouldn't be submitting!
+            if (!e.target.classList.contains('verify-form')) {
+                console.warn('Blocking unexpected form submission:', e.target);
+                e.preventDefault(); 
+            }
+        }, true);
+
         document.querySelectorAll('.subscribe-btn').forEach(btn=>{
             btn.addEventListener('click', async function(e){
+                e.preventDefault();
+                e.stopPropagation();
+                
                 const card = e.target.closest('.plan-card');
                 const planKey = e.target.dataset.plan;
 
-                // call backend to create a pending payment and get QR
-                const res = await fetch('<?= BASE_URL ?>/payment/create', {
+                // Flip immediately and hide others
+                card.classList.add('flipped');
+                hideOthers(card);
+                
+                // Hide arrows when a plan is selected
+                document.querySelectorAll('.slider-arrow').forEach(a => a.style.display = 'none');
+
+                // Show a loading message in the back details if needed
+                const back = card.querySelector('.card-back');
+                back.style.display = 'block';
+                const qrCont = card.querySelector('.qr-container');
+                const details = card.querySelector('.payment-details');
+                
+                // Temporarily hide details until results come in
+                details.style.display = 'none';
+                qrCont.style.display = 'block';
+                const qrImg = card.querySelector('.qr-img');
+                const originalQrSrc = qrImg.src;
+                qrImg.style.opacity = '0.5';
+                
+                // call backend to get QR code WITHOUT creating payment record
+                const res = await fetch('<?= BASE_URL ?>/payment/get_qr', {
                     method: 'POST',
                     headers: {'Content-Type':'application/json'},
                     body: JSON.stringify({plan: planKey})
                 });
 
                 const data = await res.json();
-                if (data.status === 'success') {
-                    const back = card.querySelector('.card-back');
-                    back.style.display = 'block';
+                qrImg.style.opacity = '1';
 
-                    const qrImg = card.querySelector('.qr-img');
-                    // use server-side QR endpoint URL
-                    const qrUrl = data.qr_url || data.qr || '';
+                if (data.status === 'success') {
+                    // use QR URL from response
+                    const qrUrl = data.qr_url || '';
                     qrImg.src = qrUrl;
-                    card.querySelector('input[name=payment_id]').value = data.payment_id;
+                    // Store plan info for later use (when "I Paid" is clicked)
+                    if (data.plan_id) {
+                        card.querySelector('input[name=plan_id]').value = data.plan_id;
+                    }
+                    if (data.plan_key) {
+                        card.querySelector('input[name=plan_key]').value = data.plan_key;
+                    }
+                    // IMPORTANT: DO NOT set payment_id here - it will be created when "I Paid" is clicked
+                    // Clear any existing payment_id to be safe
+                    card.querySelector('input[name=payment_id]').value = '';
 
                     // set open link
                     const openLink = card.querySelector('.open-upi-link');
@@ -269,12 +312,8 @@
                         copyBtn.dataset.listenerAdded = 'true';
                     }
 
-                    // Hide arrows when a plan is selected
-                    document.querySelectorAll('.slider-arrow').forEach(a => a.style.display = 'none');
-                    
-                    // flip and hide others
-                    card.classList.add('flipped');
-                    hideOthers(card);
+                    // Keep QR view visible so user can scan it
+                    toggleView(true);
                 } else {
                     if (data.message === 'Not authenticated') {
                         // redirect to login so user can authenticate first
@@ -282,6 +321,8 @@
                         return;
                     }
                     alert(data.message || 'Unable to create payment');
+                    // Flip back on error
+                    showAll();
                 }
             });
         });
@@ -324,6 +365,86 @@
         document.querySelectorAll('.cancel-btn').forEach(b=>{
             b.addEventListener('click', function(e){
                 showAll();
+            });
+        });
+
+        // Intercept verify form submit and use requestSubmit with an allow flag
+        document.querySelectorAll('.verify-form').forEach(form => {
+            // submit handler: allow submission only if flag set
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // ALWAYS block native submit
+                runValidationAndSubmit();
+            });
+
+
+            const runValidationAndSubmit = async function() {
+                const utrInput = form.querySelector('input[name=utr]');
+                const paymentId = form.querySelector('input[name=payment_id]').value;
+                const planKey = form.querySelector('input[name=plan_key]').value;
+                const utr = (utrInput && utrInput.value || '').trim();
+                const errSpan = form.querySelector('.utr-error');
+
+                function setUtrError(msg) {
+                    if (errSpan) {
+                        if (msg) {
+                            errSpan.style.display = 'block';
+                            errSpan.textContent = msg;
+                        } else {
+                            errSpan.style.display = 'none';
+                            errSpan.textContent = '';
+                        }
+                    }
+                }
+
+                if (!utr) {
+                    setUtrError('Please enter the transaction id (UTR/TID).');
+                    return;
+                }
+
+                // clear previous error while checking
+                setUtrError('');
+
+                // check uniqueness server-side (payment_id may be empty - will be created in verify)
+                const fd = new FormData();
+                fd.append('utr', utr);
+                fd.append('payment_id', paymentId || '');
+
+                fetch('<?= BASE_URL ?>/payment/check_utr', {
+                    method: 'POST',
+                    body: fd
+                }).then(r => r.json()).then(data => {
+                    if (data.status === 'success') {
+                        if (data.available) {
+                            // Submit form - verify() will create payment record with UTR
+                            form.submit(); // ✅ bypasses event handlers safely
+                        } else {
+                            setUtrError('This transaction id has already been used. Please verify your transaction id.');
+                        }
+                    } else {
+                        setUtrError(data.message || 'Unable to validate transaction id. Try again.');
+                    }
+                }).catch(err => {
+                    console.error(err);
+                    setUtrError('Unable to validate transaction id. Try again later.');
+                });
+            };
+
+            // Click handler for the explicit button
+            const btn = form.querySelector('.submit-utr-btn');
+            if (btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // start validation which will call requestSubmit when OK
+                    runValidationAndSubmit();
+                });
+            }
+
+            // Clear inline error when user types
+            form.querySelectorAll('input[name=utr]').forEach(inp => {
+                inp.addEventListener('input', function() {
+                    const err = form.querySelector('.utr-error');
+                    if (err) { err.style.display = 'none'; err.textContent = ''; }
+                });
             });
         });
 
