@@ -1,0 +1,49 @@
+# Root .gitignore for PHP / Composer / XAMPP projects
+
+# Vendor directory (installed dependencies)
+vendor/
+
+# Environment files
+.env
+.env.*
+
+copomser.lock
+
+# Composer PHAR
+composer.phar
+
+# IDE / Editor directories
+/.idea/
+/.vscode/
+
+# Node
+node_modules/
+
+# Logs and caches
+*.log
+*.cache
+/.phpunit.result.cache
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+/build/
+/dist/
+
+# Database files
+*.sqlite
+*.sqlite3
+*.sql
+
+# Runtime files
+/tmp/
+/cache/
+/sessions/
+/public/uploads/
+
+# Misc
+*.iml
+.sass-cache/
+/.php_cs.cache
