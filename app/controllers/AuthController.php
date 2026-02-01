@@ -5,6 +5,13 @@ class AuthController extends Controller
     // 🔐 Login
     public function login()
     {
+        // Redirect if already logged in
+        if (isset($_SESSION['user_id'])) {
+             $redirect = ($_SESSION['role'] === 'admin') ? '/admin/dashboard' : '/user/dashboard';
+             header("Location: " . BASE_URL . $redirect);
+             exit;
+        }
+
         // ✅ Always define error
         $error = null;
 
@@ -44,6 +51,12 @@ class AuthController extends Controller
     // 📝 Register
     public function register()
     {
+        if (isset($_SESSION['user_id'])) {
+             $redirect = ($_SESSION['role'] === 'admin') ? '/admin/dashboard' : '/user/dashboard';
+             header("Location: " . BASE_URL . $redirect);
+             exit;
+        }
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $data = [
@@ -103,7 +116,8 @@ public function verifyOtp()
     if ($_POST['otp'] == $_SESSION['register']['otp']
         && time() <= $_SESSION['register']['expiry']) {
 
-        $this->model('User')->create([
+        $userModel = $this->model('User');
+        $userModel->create([
             'name' => $_SESSION['register']['name'],
             'email' => $_SESSION['register']['email'],
             'password' => $_SESSION['register']['password'],
@@ -111,9 +125,17 @@ public function verifyOtp()
             'is_verified' => 1
         ]);
 
+        // Auto-login
+        $newUser = $userModel->findByEmail($_SESSION['register']['email']);
+        if ($newUser) {
+            $_SESSION['user_id'] = $newUser['id'];
+            $_SESSION['role'] = $newUser['role'];
+        }
+
         unset($_SESSION['register'], $_SESSION['otp_sent']);
 
-        header("Location: " . BASE_URL . "/auth/login");
+        // Redirect to profile edit to complete details
+        header("Location: " . BASE_URL . "/profile/edit");
         exit;
     }
 
@@ -151,5 +173,78 @@ public function resetRegister()
     header("Location: " . BASE_URL . "/auth/register");
     exit;
 }
+
+    // 🔑 Forgot Password - View
+    public function forgotPassword()
+    {
+        $this->view('auth/forgot_password');
+    }
+
+    // 🔑 Forgot Password - Send OTP
+    public function sendResetOtp()
+    {
+        $email = $_POST['email'] ?? '';
+        $userModel = $this->model('User');
+        $user = $userModel->findByEmail($email);
+
+        if (!$user) {
+            $this->view('auth/forgot_password', ['error' => 'Email not found']);
+            return;
+        }
+
+        $otp = rand(100000, 999999);
+
+        $_SESSION['reset'] = [
+            'email' => $email,
+            'otp' => $otp,
+            'expiry' => time() + 300
+        ];
+
+        $_SESSION['reset_otp_sent'] = true;
+
+        Mailer::send(
+            $email,
+            "Password Reset OTP",
+            "<h3>Your OTP: $otp</h3><p>Valid for 5 minutes</p>"
+        );
+
+        header("Location: " . BASE_URL . "/auth/resetPassword");
+        exit;
+    }
+
+    // 🔑 Reset Password - View
+    public function resetPassword()
+    {
+        if (!isset($_SESSION['reset_otp_sent'])) {
+             header("Location: " . BASE_URL . "/auth/forgotPassword");
+             exit;
+        }
+        $this->view('auth/reset_password');
+    }
+
+    // 🔑 Reset Password - Verify OTP & Update Password
+    public function verifyResetOtp()
+    {
+        if($_SERVER['REQUEST_METHOD'] !== 'POST'){
+             $this->resetPassword();
+             return;
+        }
+
+        $otp = $_POST['otp'] ?? '';
+        $password = $_POST['password'] ?? '';
+        
+        if ($otp == $_SESSION['reset']['otp'] && time() <= $_SESSION['reset']['expiry']) {
+            
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $this->model('User')->updatePassword($_SESSION['reset']['email'], $hashedPassword);
+
+            unset($_SESSION['reset'], $_SESSION['reset_otp_sent']);
+
+            header("Location: " . BASE_URL . "/auth/login");
+            exit;
+        }
+
+        $this->view('auth/reset_password', ['error' => 'Invalid or expired OTP']);
+    }
 
 }
