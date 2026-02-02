@@ -158,4 +158,18 @@ class Payment extends Model
         $stmt->execute([$userId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Update payment details (UTR and Payer UPI)
+     * 
+     * @param int $id
+     * @param string $utr
+     * @param string $payerUpi
+     */
+    public function updatePaymentDetails($id, $utr, $payerUpi)
+    {
+        $sql = "UPDATE payments SET utr_number = ?, payer_upi = ? WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$utr, $payerUpi, $id]);
+    }
 }

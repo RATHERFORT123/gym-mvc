@@ -33,6 +33,10 @@
                     </div>
 
                     <h5 class="text-secondary mt-3">Academic Info</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Enrollment Number</label>
+                        <input type="text" name="enrollment_number" class="form-control" value="<?= htmlspecialchars($profile['enrollment_number'] ?? '') ?>" placeholder="e.g. 0801CS211001" required>
+                    </div>
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label class="form-label">College Year</label>

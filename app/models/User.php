@@ -105,6 +105,7 @@ public function updateProfile($userId, $data, $role)
                         first_name = ?,
                         last_name = ?,
                         mobile_number = ?,
+                        enrollment_number = ?,
                         college_year = ?,
                         semester = ?,
                         branch = ?,
@@ -115,15 +116,17 @@ public function updateProfile($userId, $data, $role)
         } else {
             $sql = "INSERT INTO user_profiles
                     (first_name, last_name, mobile_number,
+                     enrollment_number,
                      college_year, semester, branch,
                      height_cm, weight_kg, fitness_goal, user_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         }
 
         $params = [
             $data['first_name'] ?? null,
             $data['last_name'] ?? null,
             $data['mobile_number'] ?? null,
+            $data['enrollment_number'] ?? null,
             $data['college_year'] ?? null,
             $data['semester'] ?? null,
             $data['branch'] ?? null,

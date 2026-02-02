@@ -96,6 +96,7 @@ class ProfileController extends Controller
                     'first_name' => $_POST['first_name'] ?? '',
                     'last_name' => $_POST['last_name'] ?? '',
                     'mobile_number' => $_POST['mobile_number'] ?? '',
+                    'enrollment_number' => $_POST['enrollment_number'] ?? '',
                     'college_year' => $_POST['college_year'] ?? '',
                     'semester' => $_POST['semester'] ?? '',
                     'branch' => $_POST['branch'] ?? '',

@@ -31,7 +31,7 @@
                                     <td><?= date('d M, H:i', strtotime($p['created_at'])) ?></td>
                                     <td>
                                         <?= htmlspecialchars($p['user_name']) ?><br>
-                                        <small class="text-muted"><?= htmlspecialchars($p['user_email']) ?></small>
+                                        <small class="text-white"><?= htmlspecialchars($p['user_email']) ?></small>
                                     </td>
                                     <td><?= htmlspecialchars($p['plan_name']) ?></td>
                                     <td class="fw-bold text-success">₹<?= number_format($p['amount'], 2) ?></td>
@@ -51,9 +51,16 @@
                                     <td>
                                         <?php if ($p['status'] === 'pending'): ?>
                                             <a href="<?= BASE_URL ?>/admin/verifyPayment/<?= $p['id'] ?>" class="btn btn-sm btn-success">Verify</a>
-                                        <?php else: ?>
-                                            -
                                         <?php endif; ?>
+                                        <button type="button" 
+                                            class="btn btn-sm btn-primary edit-payment-btn btn-mini"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#editPaymentModal"
+                                            data-id="<?= $p['id'] ?>"
+                                            data-utr="<?= htmlspecialchars($p['utr_number'] ?? '') ?>"
+                                            data-upi="<?= htmlspecialchars($p['payer_upi'] ?? '') ?>">
+                                            Edit
+                                        </button>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -65,4 +72,46 @@
     </div>
 </div>
 
-<?php include __DIR__ . '/../layouts/header.php'; ?>
+<div class="modal fade" id="editPaymentModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" method="POST" action="<?= BASE_URL ?>/admin/editPayment">
+      <div class="modal-header">
+        <h5 class="modal-title text-black">Edit Payment Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="payment_id" id="edit_payment_id">
+
+        <div class="mb-3">
+          <label class="text-black">Transaction ID (UTR)</label>
+          <input type="text" name="utr_number" id="edit_utr_number" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="text-black">Payer UPI ID</label>
+          <input type="text" name="payer_upi" id="edit_payer_upi" class="form-control">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const editBtns = document.querySelectorAll('.edit-payment-btn');
+    editBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('edit_payment_id').value = this.dataset.id;
+            document.getElementById('edit_utr_number').value = this.dataset.utr;
+            document.getElementById('edit_payer_upi').value = this.dataset.upi;
+        });
+    });
+});
+</script>
+
+
+<?php include __DIR__ . '/../layouts/footer.php'; ?>

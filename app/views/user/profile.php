@@ -33,6 +33,7 @@
                     <!-- Academic Info -->
                     <div class="col-md-6 mb-3">
                         <h5 class="text-primary">Academic Details</h5>
+                        <p><strong>Enrollment No:</strong> <?= htmlspecialchars($profile['enrollment_number'] ?? '-') ?></p>
                         <p><strong>Year:</strong> <?= htmlspecialchars($profile['college_year'] ?? '-') ?></p>
                         <p><strong>Semester:</strong> <?= htmlspecialchars($profile['semester'] ?? '-') ?></p>
                         <p><strong>Branch:</strong> <?= htmlspecialchars($profile['branch'] ?? '-') ?></p>

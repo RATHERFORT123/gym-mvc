@@ -21,6 +21,16 @@ class PaymentController extends Controller
             $daysLeft = (int) floor($diff / 86400);
         }
 
+        // Check if user has an active and verified subscription
+        $hasActiveVerifiedSubscription = false;
+        if ($currentPlan && $daysLeft !== null && $daysLeft >= 0 && !empty($currentPlan['payment_id'])) {
+            $paymentModel = $this->model('Payment');
+            $payment = $paymentModel->getById($currentPlan['payment_id']);
+            if ($payment && $payment['status'] === 'verified') {
+                $hasActiveVerifiedSubscription = true;
+            }
+        }
+
         // Fetch master plans from DB
         $plans = $planModel->getAllMasterPlans();
 
@@ -28,7 +38,8 @@ class PaymentController extends Controller
             'plans' => $plans,
             'currentPlan' => $currentPlan,
             'daysLeft' => $daysLeft,
-            'preselect' => $preselect
+            'preselect' => $preselect,
+            'hasActiveVerifiedSubscription' => $hasActiveVerifiedSubscription
         ]);
     }
 

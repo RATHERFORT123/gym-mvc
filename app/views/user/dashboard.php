@@ -5,10 +5,15 @@
 <!-- Subscription Alerts moved from plans page -->
 <?php if (!empty($currentPlan)): ?>
     
-    <?php if (is_int($daysLeft) && $daysLeft <= 2 && $daysLeft >= 0): ?>
+    <?php if (is_int($daysLeft) && $daysLeft <= 3 && $daysLeft >= 0): ?>
         <div class="alert alert-warning border-0 shadow-sm">
             <i class="fas fa-hourglass-half me-2"></i>
-            <strong>Heads up:</strong> Your plan <em><?= htmlspecialchars($currentPlan['plan_name']) ?></em> expires in <strong><?= $daysLeft === 0 ? 'today' : $daysLeft . ' day' . ($daysLeft > 1 ? 's' : '') ?></strong>.
+            <strong>Heads up:</strong> Your plan <em><?= htmlspecialchars($currentPlan['plan_name']) ?></em> 
+            <?php if ($daysLeft === 0): ?>
+                will expire <strong>today</strong>.
+            <?php else: ?>
+                expires in <strong><?= $daysLeft ?> days</strong>.
+            <?php endif; ?>
             <a class="btn btn-sm btn-success ms-3" href="<?= BASE_URL ?>/payment/index?plan=<?= urlencode($currentPlan['plan_key']) ?>">Renew now</a>
         </div>
 

@@ -201,6 +201,22 @@ public function dashboard()
         exit;
     }
 
+    public function editPayment()
+    {
+        Auth::role(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = $_POST['payment_id'] ?? null;
+            $utr = trim($_POST['utr_number'] ?? '');
+            $payer_upi = trim($_POST['payer_upi'] ?? '');
+
+            if ($id) {
+                $this->model('Payment')->updatePaymentDetails($id, $utr, $payer_upi);
+            }
+        }
+        header("Location: " . BASE_URL . "/admin/payments");
+        exit;
+    }
+
     public function updatePlan()
     {
         Auth::role(['admin']);

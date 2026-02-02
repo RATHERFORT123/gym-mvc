@@ -40,7 +40,11 @@
                                 <h4 class="text-warning mb-2"><?= htmlspecialchars($p['name']) ?></h4>
                                 <div class="mb-3 display-6">₹<?= number_format($displayPrice) ?></div>
                                 <p class="text-white">Access workouts, diet plans and gym attendance</p>
-                                <div class="btn btn-success subscribe-btn" data-plan="<?= htmlspecialchars($key) ?>" style="cursor:pointer;">Subscribe</div>
+                                <?php if (!empty($hasActiveVerifiedSubscription)): ?>
+                                    <button class="btn btn-secondary" disabled>Active Subscription</button>
+                                <?php else: ?>
+                                    <div class="btn btn-success subscribe-btn" data-plan="<?= htmlspecialchars($key) ?>" style="cursor:pointer;">Subscribe</div>
+                                <?php endif; ?>
                             </div>
 
                             <div class="card-back card-body p-3 text-center">
@@ -77,7 +81,7 @@
                                             <input class="form-control form-control-sm" name="payer_upi" placeholder="Your UPI ID (Optional)">
                                         </div>
                                         <div class="mb-2">
-                                            <input class="form-control form-control-sm" name="utr" placeholder="Enter transaction id (UTR/TID)" required>
+                                            <input class="form-control form-control-sm" name="utr" placeholder="Enter UTR" required>
                                             <span class="utr-error text-danger small" style="display:none; margin-top:4px;"></span>
                                         </div>
                                         <div class="d-flex justify-content-center gap-2">
@@ -397,7 +401,12 @@
                 }
 
                 if (!utr) {
-                    setUtrError('Please enter the transaction id (UTR/TID).');
+                    setUtrError('Please enter UTR.');
+                    return;
+                }
+
+                if (!/^\d+$/.test(utr)) {
+                    setUtrError('UTR must contain only numbers.');
                     return;
                 }
 
@@ -416,7 +425,7 @@
                     if (data.status === 'success') {
                         if (data.available) {
                             // Submit form - verify() will create payment record with UTR
-                            form.submit(); // ✅ bypasses event handlers safely
+                            form.submit();
                         } else {
                             setUtrError('This transaction id has already been used. Please verify your transaction id.');
                         }
