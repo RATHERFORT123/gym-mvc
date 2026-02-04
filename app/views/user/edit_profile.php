@@ -17,13 +17,37 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">First Name</label>
                             <input type="text" name="first_name" class="form-control" value="<?= htmlspecialchars($profile['first_name'] ?? '') ?>" required>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Middle Name</label>
+                            <input type="text" name="middle_name" class="form-control" value="<?= htmlspecialchars($profile['middle_name'] ?? '') ?>">
+                        </div>
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">Last Name</label>
                             <input type="text" name="last_name" class="form-control" value="<?= htmlspecialchars($profile['last_name'] ?? '') ?>" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Gender</label>
+                            <select name="gender" class="form-select">
+                                <option value="">Select Gender</option>
+                                <option value="Male" <?= ($profile['gender'] ?? '') == 'Male' ? 'selected' : '' ?>>Male</option>
+                                <option value="Female" <?= ($profile['gender'] ?? '') == 'Female' ? 'selected' : '' ?>>Female</option>
+                                <option value="Other" <?= ($profile['gender'] ?? '') == 'Other' ? 'selected' : '' ?>>Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Birth Date</label>
+                            <input type="date" name="birth_date" class="form-control" value="<?= htmlspecialchars($profile['birth_date'] ?? '') ?>">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Blood Group</label>
+                            <input type="text" name="blood_group" class="form-control" value="<?= htmlspecialchars($profile['blood_group'] ?? '') ?>" placeholder="e.g. A+">
                         </div>
                     </div>
 
@@ -60,15 +84,19 @@
 
                     <h5 class="text-secondary mt-3">Fitness Details</h5>
                     <div class="row">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label class="form-label">Height (cm)</label>
                             <input type="number" step="0.01" name="height" class="form-control" value="<?= htmlspecialchars($profile['height_cm'] ?? '') ?>">
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label class="form-label">Weight (kg)</label>
                             <input type="number" step="0.01" name="weight" class="form-control" value="<?= htmlspecialchars($profile['weight_kg'] ?? '') ?>">
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Waist Size (cm)</label>
+                            <input type="number" step="0.01" name="waist_size" class="form-control" value="<?= htmlspecialchars($profile['waist_size'] ?? '') ?>">
+                        </div>
+                        <div class="col-md-3 mb-3">
                             <label class="form-label">Fitness Goal</label>
                             <select name="fitness_goal" class="form-select" required>
                                 <option value="">Select Goal</option>

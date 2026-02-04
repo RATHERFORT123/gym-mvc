@@ -29,13 +29,16 @@ class AuthController extends Controller
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['role']    = $user['role'];
 
-                // ✅ Role-based redirect
-                if ($user['role'] === 'admin') {
+                // ✅ Role-based redirect or intended URL
+                if (isset($_SESSION['intended_url'])) {
+                    $redirectUrl = $_SESSION['intended_url'];
+                    unset($_SESSION['intended_url']); // Clear it after use
+                    header("Location: " . $redirectUrl);
+                } elseif ($user['role'] === 'admin') {
                     header("Location: " . BASE_URL . "/admin/dashboard");
                 } else {
                     // user + faculty
                     header("Location: " . BASE_URL . "/user/dashboard");
-
                 }
                 exit;
             }

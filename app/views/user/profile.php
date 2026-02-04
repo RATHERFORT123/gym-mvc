@@ -15,9 +15,14 @@
                         <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px; font-size: 2rem;">
                             <?= strtoupper(substr($profile['email'], 0, 1)) ?>
                         </div>
-                        <h3><?= htmlspecialchars(($profile['first_name'] ?? '') . ' ' . ($profile['last_name'] ?? 'Guest')) ?></h3>
-                        <p class="text-muted"><?= htmlspecialchars($profile['email']) ?></p>
-                        <span class="badge bg-info text-dark"><?= htmlspecialchars($profile['fitness_goal'] ?? 'No Goal Set') ?></span>
+                        <h3><?= htmlspecialchars(($profile['first_name'] ?? '') . ' ' . ($profile['middle_name'] ? $profile['middle_name'] . ' ' : '') . ($profile['last_name'] ?? 'Guest')) ?></h3>
+                        <p class="text-muted mb-2"><?= htmlspecialchars($profile['email']) ?></p>
+                        <div class="d-flex justify-content-center gap-2">
+                            <span class="badge bg-info text-dark"><?= htmlspecialchars($profile['fitness_goal'] ?? 'No Goal Set') ?></span>
+                            <?php if(!empty($profile['blood_group'])): ?>
+                                <span class="badge bg-danger">Blood Group: <?= htmlspecialchars($profile['blood_group']) ?></span>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
 
@@ -28,6 +33,8 @@
                     <div class="col-md-6 mb-3">
                         <h5 class="text-primary">Personal Details</h5>
                         <p><strong>Mobile:</strong> <?= htmlspecialchars($profile['mobile_number'] ?? '-') ?></p>
+                        <p><strong>Gender:</strong> <?= htmlspecialchars($profile['gender'] ?? '-') ?></p>
+                        <p><strong>Birth Date:</strong> <?= htmlspecialchars($profile['birth_date'] ?? '-') ?></p>
                     </div>
 
                     <!-- Academic Info -->
@@ -52,6 +59,7 @@
                                     <tr>
                                         <th>Height (cm)</th>
                                         <th>Weight (kg)</th>
+                                        <th>Waist (cm)</th>
                                         <th>BMI</th>
                                         <th>Status</th>
                                     </tr>
@@ -60,6 +68,7 @@
                                     <tr>
                                         <td><?= htmlspecialchars($profile['height_cm'] ?? '-') ?> cm</td>
                                         <td><?= htmlspecialchars($profile['weight_kg'] ?? '-') ?> kg</td>
+                                        <td><?= htmlspecialchars($profile['waist_size'] ?? '-') ?> cm</td>
                                         <td><strong><?= $bmi ?? '-' ?></strong></td>
                                         <td>
                                             <?php if($bmi): ?>

@@ -67,16 +67,21 @@ public function updateProfile($userId, $data, $role)
                         department = ?,
                         position = ?,
                         subject_expert = ?,
-                        qualification = ?,
-                        experience_years = ?
+                        middle_name = ?,
+                        gender = ?,
+                        birth_date = ?,
+                        blood_group = ?,
+                        bmi_index = ?,
+                        waist_size = ?
                     WHERE user_id = ?";
         } else {
             $sql = "INSERT INTO user_profiles
                     (first_name, last_name, mobile_number,
                      height_cm, weight_kg, fitness_goal,
                      department, position, subject_expert,
-                     qualification, experience_years, user_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                     middle_name, gender, birth_date, blood_group,
+                     bmi_index, waist_size, user_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         }
 
         $params = [
@@ -89,8 +94,12 @@ public function updateProfile($userId, $data, $role)
             $data['department'] ?? null,
             $data['position'] ?? null,
             $data['subject_expert'] ?? null,
-            $data['qualification'] ?? null,
-            $data['experience_years'] ?? null,
+            $data['middle_name'] ?? null,
+            $data['gender'] ?? null,
+            $data['birth_date'] ?? null,
+            $data['blood_group'] ?? null,
+            $data['bmi_index'] ?? null,
+            $data['waist_size'] ?? null,
             $userId
         ];
     }
@@ -111,15 +120,23 @@ public function updateProfile($userId, $data, $role)
                         branch = ?,
                         height_cm = ?,
                         weight_kg = ?,
-                        fitness_goal = ?
+                        fitness_goal = ?,
+                        middle_name = ?,
+                        gender = ?,
+                        birth_date = ?,
+                        blood_group = ?,
+                        bmi_index = ?,
+                        waist_size = ?
                     WHERE user_id = ?";
         } else {
             $sql = "INSERT INTO user_profiles
                     (first_name, last_name, mobile_number,
                      enrollment_number,
                      college_year, semester, branch,
-                     height_cm, weight_kg, fitness_goal, user_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                     height_cm, weight_kg, fitness_goal,
+                     middle_name, gender, birth_date, blood_group,
+                     bmi_index, waist_size, user_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         }
 
         $params = [
@@ -133,6 +150,12 @@ public function updateProfile($userId, $data, $role)
             $data['height'] ?? null,
             $data['weight'] ?? null,
             $data['fitness_goal'] ?? null,
+            $data['middle_name'] ?? null,
+            $data['gender'] ?? null,
+            $data['birth_date'] ?? null,
+            $data['blood_group'] ?? null,
+            $data['bmi_index'] ?? null,
+            $data['waist_size'] ?? null,
             $userId
         ];
     }

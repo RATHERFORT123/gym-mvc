@@ -73,18 +73,32 @@ class ProfileController extends Controller
             // ==========================
             if ($role === 'faculty') {
 
+                $height = $_POST['height'] ?? '';
+                $weight = $_POST['weight'] ?? '';
+                $bmiIndex = null;
+
+                if (!empty($height) && !empty($weight)) {
+                    $heightM = $height / 100;
+                    $bmiIndex = $weight / ($heightM * $heightM);
+                    $bmiIndex = number_format($bmiIndex, 2);
+                }
+
                 $data = [
                     'first_name' => $_POST['first_name'] ?? '',
                     'last_name' => $_POST['last_name'] ?? '',
+                    'middle_name' => $_POST['middle_name'] ?? '',
+                    'gender' => $_POST['gender'] ?? '',
+                    'birth_date' => $_POST['birth_date'] ?? '',
+                    'blood_group' => $_POST['blood_group'] ?? '',
                     'mobile_number' => $_POST['mobile_number'] ?? '',
-                    'height' => $_POST['height'] ?? '',
-                    'weight' => $_POST['weight'] ?? '',
+                    'height' => $height,
+                    'weight' => $weight,
                     'fitness_goal' => $_POST['fitness_goal'] ?? '',
                     'department' => $_POST['department'] ?? '',
                     'position' => $_POST['position'] ?? '',
                     'subject_expert' => $_POST['subject_expert'] ?? '',
-                    'qualification' => $_POST['qualification'] ?? '',
-                    'experience_years' => $_POST['experience_years'] ?? ''
+                    'bmi_index' => $bmiIndex,
+                    'waist_size' => $_POST['waist_size'] ?? ''
                 ];
             }
             // ==========================
@@ -92,17 +106,33 @@ class ProfileController extends Controller
             // ==========================
             else {
 
+                $height = $_POST['height'] ?? '';
+                $weight = $_POST['weight'] ?? '';
+                $bmiIndex = null;
+
+                if (!empty($height) && !empty($weight)) {
+                    $heightM = $height / 100;
+                    $bmiIndex = $weight / ($heightM * $heightM);
+                    $bmiIndex = number_format($bmiIndex, 2);
+                }
+
                 $data = [
                     'first_name' => $_POST['first_name'] ?? '',
                     'last_name' => $_POST['last_name'] ?? '',
+                    'middle_name' => $_POST['middle_name'] ?? '',
+                    'gender' => $_POST['gender'] ?? '',
+                    'birth_date' => $_POST['birth_date'] ?? '',
+                    'blood_group' => $_POST['blood_group'] ?? '',
                     'mobile_number' => $_POST['mobile_number'] ?? '',
                     'enrollment_number' => $_POST['enrollment_number'] ?? '',
                     'college_year' => $_POST['college_year'] ?? '',
                     'semester' => $_POST['semester'] ?? '',
                     'branch' => $_POST['branch'] ?? '',
-                    'height' => $_POST['height'] ?? '',
-                    'weight' => $_POST['weight'] ?? '',
-                    'fitness_goal' => $_POST['fitness_goal'] ?? ''
+                    'height' => $height,
+                    'weight' => $weight,
+                    'fitness_goal' => $_POST['fitness_goal'] ?? '',
+                    'bmi_index' => $bmiIndex,
+                    'waist_size' => $_POST['waist_size'] ?? ''
                 ];
             }
 

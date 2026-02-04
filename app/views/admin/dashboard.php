@@ -67,6 +67,29 @@
                 </div>
             </div>
         </div>
+
+        <!-- Expiration Reminders -->
+        <div class="col-md-4">
+            <div class="card shadow h-100 border-danger">
+                <div class="card-body text-center">
+                    <h1 class="display-4 text-danger">🔔</h1>
+                    <h5 class="card-title">Expiration Reminders</h5>
+                    <p class="card-text text-muted">Notify users whose plans expire in 3 or 1 days.</p>
+                    <a href="<?= BASE_URL ?>/cron/notifyExpiringPlans?manual=1" class="btn btn-danger" onclick="return confirm('Send expiration emails to all affected users?')">Send Emails Now</a>
+                </div>
+            </div>
+        </div>
+        <!-- QR Attendance -->
+        <div class="col-md-4">
+            <div class="card shadow h-100 border-info">
+                <div class="card-body text-center">
+                    <h1 class="display-4 text-info">QR</h1>
+                    <h5 class="card-title">Attendance QR Code</h5>
+                    <p class="card-text text-muted">Generate and print QR code for gym wall.</p>
+                    <a href="<?= BASE_URL ?>/admin/qr_attendance" class="btn btn-info text-white">View QR Code</a>
+                </div>
+            </div>
+        </div>
         
     </div>
 </div>

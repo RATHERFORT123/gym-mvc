@@ -67,8 +67,13 @@ class Database
             department VARCHAR(100) NULL,
             position VARCHAR(100) NULL,
             subject_expert VARCHAR(150) NULL,
-            qualification VARCHAR(150) NULL,
-            experience_years INT NULL,
+
+            middle_name VARCHAR(50) NULL,
+            gender ENUM('Male', 'Female', 'Other') NULL,
+            birth_date DATE NULL,
+            blood_group VARCHAR(10) NULL,
+            bmi_index DECIMAL(5,2) NULL,
+            waist_size DECIMAL(5,2) NULL,
 
             height_cm DECIMAL(5,2),
             weight_kg DECIMAL(5,2),
@@ -178,6 +183,35 @@ class Database
         try {
             self::$pdo->exec("CREATE INDEX idx_payments_user ON payments(user_id)");
             self::$pdo->exec("CREATE INDEX idx_payments_status ON payments(status)");
+        } catch (Exception $e) {}
+
+        // ==========================
+        // 🔄 MIGRATIONS (Profile Fields Update)
+        // ==========================
+        try {
+            $cols = [
+                "middle_name"  => "VARCHAR(50) NULL",
+                "gender"       => "ENUM('Male', 'Female', 'Other') NULL",
+                "birth_date"   => "DATE NULL",
+                "blood_group"  => "VARCHAR(10) NULL",
+                "bmi_index"    => "DECIMAL(5,2) NULL",
+                "waist_size"   => "DECIMAL(5,2) NULL"
+            ];
+
+            foreach ($cols as $col => $type) {
+                try {
+                    self::$pdo->exec("ALTER TABLE user_profiles ADD COLUMN $col $type");
+                } catch (Exception $e) { /* Column might already exist */ }
+            }
+
+            // Remove old fields
+            try {
+                self::$pdo->exec("ALTER TABLE user_profiles DROP COLUMN qualification");
+            } catch (Exception $e) {}
+            try {
+                self::$pdo->exec("ALTER TABLE user_profiles DROP COLUMN experience_years");
+            } catch (Exception $e) {}
+
         } catch (Exception $e) {}
 
         // ==========================

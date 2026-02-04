@@ -430,4 +430,9 @@ public function attendanceCalendar($userId)
 
 
 
+    public function qr_attendance()
+    {
+        Auth::role(['admin']);
+        $this->view('admin/qr_attendance');
+    }
 }

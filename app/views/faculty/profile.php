@@ -18,35 +18,43 @@
                     </div>
 
                     <h4>
-                        <?= htmlspecialchars(($profile['first_name'] ?? '') . ' ' . ($profile['last_name'] ?? '')) ?>
+                        <?= htmlspecialchars(($profile['first_name'] ?? '') . ' ' . ($profile['middle_name'] ? $profile['middle_name'] . ' ' : '') . ($profile['last_name'] ?? '')) ?>
                     </h4>
-
-                    <p class="text-muted"><?= htmlspecialchars($profile['email']) ?></p>
+                    <p class="text-muted mb-2"><?= htmlspecialchars($profile['email']) ?></p>
+                    <?php if(!empty($profile['blood_group'])): ?>
+                        <span class="badge bg-danger">Blood Group: <?= htmlspecialchars($profile['blood_group']) ?></span>
+                    <?php endif; ?>
                 </div>
 
                 <hr>
 
                 <!-- PERSONAL DETAILS -->
                 <h5 class="text-primary">Personal Details</h5>
-                <p><strong>Mobile:</strong> <?= $profile['mobile_number'] ?? '-' ?></p> 
+                <p><strong>Mobile:</strong> <?= htmlspecialchars($profile['mobile_number'] ?? '-') ?></p>
+                <p><strong>Gender:</strong> <?= htmlspecialchars($profile['gender'] ?? '-') ?></p>
+                <p><strong>Birth Date:</strong> <?= htmlspecialchars($profile['birth_date'] ?? '-') ?></p>
 
                 <hr>
 
                 <!-- FITNESS DETAILS -->
                 <h5 class="text-primary">Fitness Details</h5>
-                <p><strong>Height:</strong> <?= $profile['height_cm'] ?? '-' ?> cm</p>
-                <p><strong>Weight:</strong> <?= $profile['weight_kg'] ?? '-' ?> kg</p>
-                <p><strong>Fitness Goal:</strong> <?= $profile['fitness_goal'] ?? '-' ?></p>
+                <p><strong>Height:</strong> <?= htmlspecialchars($profile['height_cm'] ?? '-') ?> cm</p>
+                <p><strong>Weight:</strong> <?= htmlspecialchars($profile['weight_kg'] ?? '-') ?> kg</p>
+                <p><strong>Waist:</strong> <?= htmlspecialchars($profile['waist_size'] ?? '-') ?> cm</p>
+                <p><strong>BMI:</strong> <?= htmlspecialchars($profile['bmi_index'] ?? $bmi ?? '-') ?> 
+                    <?php if(isset($bmiCategory)): ?>
+                        <span class="badge bg-info text-dark ms-2"><?= $bmiCategory ?></span>
+                    <?php endif; ?>
+                </p>
+                <p><strong>Fitness Goal:</strong> <?= htmlspecialchars($profile['fitness_goal'] ?? '-') ?></p>
 
                 <hr>
 
                 <!-- FACULTY ACADEMIC DETAILS -->
                 <h5 class="text-primary">Academic / Professional Details</h5>
-                <p><strong>Department:</strong> <?= $profile['department'] ?? '-' ?></p>
-                <p><strong>Position:</strong> <?= $profile['position'] ?? '-' ?></p>
-                <p><strong>Subject Expert:</strong> <?= $profile['subject_expert'] ?? '-' ?></p>
-                <p><strong>Qualification:</strong> <?= $profile['qualification'] ?? '-' ?></p>
-                <p><strong>Experience:</strong> <?= $profile['experience_years'] ?? '-' ?> years</p>
+                <p><strong>Department:</strong> <?= htmlspecialchars($profile['department'] ?? '-') ?></p>
+                <p><strong>Position:</strong> <?= htmlspecialchars($profile['position'] ?? '-') ?></p>
+                <p><strong>Subject Expert:</strong> <?= htmlspecialchars($profile['subject_expert'] ?? '-') ?></p>
 
             </div>
         </div>
