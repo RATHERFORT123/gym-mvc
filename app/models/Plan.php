@@ -103,4 +103,11 @@ class Plan extends Model
         $stmt->execute([$userId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    public function getUserPlan($userId)
+    {
+        $stmt = $this->db->prepare("SELECT * FROM user_plans WHERE user_id = ? ORDER BY created_at DESC LIMIT 1");
+        $stmt->execute([$userId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }

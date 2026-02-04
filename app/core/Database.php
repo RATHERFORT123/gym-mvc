@@ -80,6 +80,19 @@ class Database
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
 
+        CREATE TABLE IF NOT EXISTS user_plans (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            plan_name VARCHAR(100),
+            workout_plan TEXT,
+            diet_plan TEXT,
+            assigned_by VARCHAR(50) DEFAULT 'Instructor',
+            start_date DATE,
+            end_date DATE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
         CREATE TABLE IF NOT EXISTS plans_master (
             id INT AUTO_INCREMENT PRIMARY KEY,
             plan_key VARCHAR(10) NOT NULL UNIQUE,

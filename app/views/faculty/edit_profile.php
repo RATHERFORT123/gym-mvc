@@ -52,9 +52,15 @@
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <label>Fitness Goal</label>
-                            <input type="text" name="fitness_goal" class="form-control"
-                                   value="<?= $profile['fitness_goal'] ?? '' ?>">
+                            <label class="form-label">Fitness Goal</label>
+                            <select name="fitness_goal" class="form-select" required>
+                                <option value="">Select Goal</option>
+                                <option value="Weight Loss" <?= ($profile['fitness_goal'] ?? '') == 'Weight Loss' ? 'selected' : '' ?>>Weight Loss</option>
+                                <option value="Muscle Gain" <?= ($profile['fitness_goal'] ?? '') == 'Muscle Gain' ? 'selected' : '' ?>>Muscle Gain</option>
+                                <option value="Weight Gain" <?= ($profile['fitness_goal'] ?? '') == 'Weight Gain' ? 'selected' : '' ?>>Weight Gain</option>
+                                <option value="General Fitness" <?= ($profile['fitness_goal'] ?? '') == 'General Fitness' ? 'selected' : '' ?>>General Fitness</option>
+                                <option value="Endurance" <?= ($profile['fitness_goal'] ?? '') == 'Endurance' ? 'selected' : '' ?>>Endurance</option>
+                            </select>
                         </div>
                     </div>
 

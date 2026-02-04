@@ -3,110 +3,250 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SGSIT Gym - Premium Fitness</title>
-    <!-- Bootstrap 5 -->
+    <title>SGSITS Gym – Premium Fitness</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link href="<?= BASE_URL ?>/public/css/style.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bhagua: #FF9933;
+            --bhagua-dark: #E67E22;
+            --white-glass: rgba(255, 255, 255, 0.75);
+            --text-dark: #1e272e;
+            --soft-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            color: var(--text-dark);
+        }
+
+        /* ===== LIGHT GLASS NAVBAR ===== */
+        .navbar {
+            background: var(--white-glass) !important;
+            backdrop-filter: blur(15px) saturate(150%);
+            -webkit-backdrop-filter: blur(15px) saturate(150%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 0;
+            transition: all 0.3s ease-in-out;
+            box-shadow: var(--soft-shadow);
+        }
+
+        .navbar.scrolled {
+            padding: 8px 0;
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-bottom: 2px solid var(--bhagua);
+        }
+
+        /* ===== BRANDING & LOGO ===== */
+        .navbar-brand {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-dark) !important;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+        }
+
+        .navbar-brand img {
+            height: 45px;
+            width: auto;
+            border-radius: 50%;
+            border: 2px solid var(--bhagua);
+            padding: 2px;
+            background: white;
+            transition: transform 0.3s ease;
+        }
+
+        .navbar-brand:hover img {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .brand-gym {
+            color: var(--bhagua);
+        }
+
+        /* ===== NAVIGATION LINKS ===== */
+        .nav-link {
+            color: var(--text-dark) !important;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0 8px;
+            padding: 8px 15px !important;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 153, 51, 0.1);
+            color: var(--bhagua) !important;
+        }
+
+        /* ===== BHAGUA ACTION BUTTONS ===== */
+        .btn-bhagua {
+            background: var(--bhagua);
+            color: white !important;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            padding: 10px 22px;
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 4px 15px rgba(255, 153, 51, 0.3);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .btn-bhagua:hover {
+            background: var(--bhagua-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 153, 51, 0.4);
+        }
+
+        .btn-outline-bhagua {
+            border: 2px solid var(--bhagua);
+            color: var(--bhagua) !important;
+            font-weight: 700;
+            padding: 8px 20px;
+            border-radius: 10px;
+            transition: 0.3s;
+        }
+
+        .btn-outline-bhagua:hover {
+            background: var(--bhagua);
+            color: white !important;
+        }
+
+        /* ===== MOBILE MENU ===== */
+        @media (max-width: 991px) {
+            .navbar-collapse {
+                background: white;
+                margin-top: 15px;
+                padding: 20px;
+                border-radius: 15px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            }
+            .nav-item {
+                border-bottom: 1px solid #f1f1f1;
+            }
+            .btn-bhagua, .btn-outline-bhagua {
+                width: 100%;
+                margin: 10px 0;
+            }
+            .brand-gym {
+  font-size: 0.6em;
+  font-weight: 600;
+  letter-spacing: 1px;
+  vertical-align: baseline;
+}
+
+        }
+    </style>
 </head>
+
 <body class="d-flex flex-column min-vh-100">
 
-<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-  <div class="container">
-    <a class="navbar-brand" href="<?= BASE_URL ?>/home/index">
-        ⚡ SGSIT GYM
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
-        ...
-      </ul>
-    </div>
-  </div>
-</nav>
+<nav id="mainNavbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
 
-<!-- Spacer for fixed navbar -->
-<div style="margin-top: 80px;"></div>
+        <a class="navbar-brand" href="<?= BASE_URL ?>/home/index">
+            <img src="https://image-static.collegedunia.com/public/college_data/images/logos/1408347301SGSITS_Indore.png" 
+                 alt="SGSITS Logo">
+            <span>
+  Gymnasium Legend 
+  <span class="brand-gym">1986</span>
+</span>
 
-<!-- 🔥 MAIN CONTENT START -->
-<main class="flex-grow-1 container py-4">
+        </a>
 
-<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-  <div class="container">
-    <a class="navbar-brand" href="<?= BASE_URL ?>/home/index">
-        ⚡ SGSIT GYM
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
-        
-        <li class="nav-item">
-            <a class="nav-link" href="<?= BASE_URL ?>/home/index">Home</a>
-        </li>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+        </button>
 
-        <?php if (isset($_SESSION['role'])): ?>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
 
-            <?php if ($_SESSION['role'] === 'admin'): ?>
                 <li class="nav-item">
-                    <a class="nav-link" href="<?= BASE_URL ?>/admin/dashboard">Dashboard</a>
+                    <a class="nav-link" href="<?= BASE_URL ?>/home/index">Home</a>
                 </li>
-            <?php else: ?>
-                 <li class="nav-item">
-                    <a class="nav-link" href="<?= BASE_URL ?>/user/dashboard">Dashboard</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="<?= BASE_URL ?>/profile/index">My Profile</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-warning fw-semibold" href="<?= BASE_URL ?>/payment/index">
-                        Membership
-                    </a>
-                </li>
-                <?php if (isset($_SESSION['role']) && $_SESSION['role'] !== 'admin'): ?>
-                    <?php if ($attendanceAllowed): ?>
-                        <?php if (!$attendanceMarkedToday): ?>
-                            <li class="nav-item">
-                                <button
-                                    id="markAttendanceBtn"
-                                    class="btn btn-success btn-sm mt-1">
-                                    Mark Attendance
-                                </button>
-                            </li>
-                        <?php endif; ?>
+
+                <?php if (isset($_SESSION['role'])): ?>
+
+                    <?php if ($_SESSION['role'] === 'admin'): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= BASE_URL ?>/admin/dashboard">Dashboard</a>
+                        </li>
                     <?php else: ?>
                         <li class="nav-item">
-                            <button class="btn btn-secondary btn-sm mt-1" disabled title="No active subscription">Mark Attendance</button>
+                            <a class="nav-link" href="<?= BASE_URL ?>/user/dashboard">Dashboard</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= BASE_URL ?>/profile/index">My Profile</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold" style="color: var(--bhagua) !important;" href="<?= BASE_URL ?>/payment/index">
+                                Membership
+                            </a>
+                        </li>
+
+                        <?php if (isset($_SESSION['role']) && $_SESSION['role'] !== 'admin'): ?>
+                            <?php if ($attendanceAllowed): ?>
+                                <?php if (!$attendanceMarkedToday): ?>
+                                    <li class="nav-item ms-lg-2">
+                                        <button id="markAttendanceBtn" class="btn btn-success btn-bhagua">
+                                            Mark Attendance
+                                        </button>
+                                    </li>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <li class="nav-item ms-lg-2">
+                                    <button class="btn btn-secondary btn-bhagua" style="background: #bdc3c7; box-shadow: none;" disabled>
+                                        Locked
+                                    </button>
+                                </li>
+                            <?php endif; ?>
+                        <?php endif; ?>
+
                     <?php endif; ?>
+
+                    <li class="nav-item ms-lg-3">
+                        <a class="btn btn-outline-bhagua" href="<?= BASE_URL ?>/auth/logout">Logout</a>
+                    </li>
+
+                <?php else: ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= BASE_URL ?>/auth/login">Login</a>
+                    </li>
+                    <li class="nav-item ms-lg-2">
+                        <a class="btn btn-bhagua" href="<?= BASE_URL ?>/auth/register">Join Now</a>
+                    </li>
                 <?php endif; ?>
-
-            <?php endif; ?>
-
-            <li class="nav-item ms-2">
-                <a class="btn btn-outline-light btn-sm mt-1" href="<?= BASE_URL ?>/auth/logout">Logout</a>
-            </li>
-
-        <?php else: ?>
-            <li class="nav-item ms-2">
-                <a class="nav-link" href="<?= BASE_URL ?>/auth/login">Login</a>
-            </li>
-            <li class="nav-item">
-                <a class="btn btn-primary ms-2" href="<?= BASE_URL ?>/auth/register">Join Now</a>
-            </li>
-        <?php endif; ?>
-      </ul>
+            </ul>
+        </div>
     </div>
-  </div>
 </nav>
 
-<!-- Spacer for fixed navbar -->
-<div style="margin-top: 80px;"></div>
+<div style="margin-top: 100px;"></div>
+
+<main class="flex-grow-1 container py-4">
+    </main>
 
 <script>
+/* Scroll Animation */
+window.addEventListener('scroll', () => {
+    const nav = document.getElementById('mainNavbar');
+    if (window.scrollY > 30) {
+        nav.classList.add('scrolled');
+    } else {
+        nav.classList.remove('scrolled');
+    }
+});
+
+/* Attendance Logic - 100% UNCHANGED */
 document.getElementById('markAttendanceBtn')?.addEventListener('click', function () {
     fetch('<?= BASE_URL ?>/attendance/mark', {
         method: 'POST',
@@ -130,3 +270,5 @@ document.getElementById('markAttendanceBtn')?.addEventListener('click', function
     });
 });
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

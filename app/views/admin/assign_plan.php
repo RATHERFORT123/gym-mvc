@@ -100,7 +100,6 @@ if(!empty($user['height_cm']) && !empty($user['weight_kg'])) {
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 
