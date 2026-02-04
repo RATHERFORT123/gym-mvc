@@ -156,11 +156,12 @@ public function dashboard()
         $pdo = Database::getInstance();
         $now = date('Y-m-d H:i:s');
         
-        // 1. Get payment and plan details
+        // 1. Get payment, plan and USER details
         $stmt = $pdo->prepare("
-            SELECT p.*, pm.plan_key 
+            SELECT p.*, pm.plan_key, pm.duration_days, pm.name as plan_name, u.name as user_name, u.email as user_email
             FROM payments p 
             JOIN plans_master pm ON pm.id = p.plan_id 
+            JOIN users u ON u.id = p.user_id
             WHERE p.id = ?
         ");
         $stmt->execute([$id]);
@@ -177,13 +178,7 @@ public function dashboard()
 
         // 3. Calculate subscription duration
         $startDate = date('Y-m-d');
-        $duration = 30; // default 30 days
-        
-        $key = $payment['plan_key'];
-        if (strpos($key, '1m') !== false) $duration = 30;
-        elseif (strpos($key, '3m') !== false) $duration = 90;
-        elseif (strpos($key, '6m') !== false) $duration = 180;
-        elseif (strpos($key, '1y') !== false || strpos($key, '12m') !== false) $duration = 365;
+        $duration = $payment['duration_days'] ?? 30; // Use stored duration from database
 
         $endDate = date('Y-m-d', strtotime("+$duration days"));
 
@@ -196,6 +191,29 @@ public function dashboard()
             $startDate,
             $endDate
         ]);
+
+        // 5. Send Membership Activated Email
+        $subject = "Membership Activated! Welcome to SGSIT Gym";
+        $message = "
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+                <h2 style='color: #198754;'>Payment Verified!</h2>
+                <p>Hello " . htmlspecialchars($payment['user_name']) . ",</p>
+                <p>Great news! Your payment for the <strong>" . htmlspecialchars($payment['plan_name']) . "</strong> has been verified and your membership is now <strong>Active</strong>.</p>
+                <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                    <p style='margin: 5px 0;'><strong>Plan:</strong> " . htmlspecialchars($payment['plan_name']) . "</p>
+                    <p style='margin: 5px 0;'><strong>Start Date:</strong> " . date('M d, Y', strtotime($startDate)) . "</p>
+                    <p style='margin: 5px 0;'><strong>End Date:</strong> " . date('M d, Y', strtotime($endDate)) . "</p>
+                    <p style='margin: 5px 0;'><strong>Status:</strong> Active</p>
+                </div>
+                <p>You now have full access to the gym facilities, personalized diet charts, and workout plans.</p>
+                <div style='text-align: center; margin: 30px 0;'>
+                    <a href='" . BASE_URL . "/user/dashboard' style='background-color: #198754; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;'>View My Dashboard</a>
+                </div>
+                <hr style='border: 0; border-top: 1px solid #eee; margin-top: 30px;'>
+                <p style='font-size: 0.8rem; color: #999; text-align: center;'>SGSIT Gym Management System</p>
+            </div>
+        ";
+        Mailer::send($payment['user_email'], $subject, $message);
         
         header("Location: " . BASE_URL . "/admin/payments");
         exit;
@@ -257,6 +275,7 @@ public function dashboard()
                 'name' => $_POST['name'],
                 'price_user' => $_POST['price_user'],
                 'price_faculty' => $_POST['price_faculty'],
+                'duration_days' => $_POST['duration_days'] ?? 30,
                 'upi_id' => !empty($_POST['upi_id']) ? $_POST['upi_id'] : null
             ];
 
@@ -434,5 +453,40 @@ public function attendanceCalendar($userId)
     {
         Auth::role(['admin']);
         $this->view('admin/qr_attendance');
+    }
+    public function getNotifications()
+    {
+        Auth::role(['admin']);
+        header('Content-Type: application/json');
+        
+        $paymentModel = $this->model('Payment');
+        $unreadCount = $paymentModel->getUnreadCount();
+        $totalCount = $paymentModel->getPendingCount();
+        $latest = $paymentModel->getPendingPayments();
+        
+        // Only return latest 5 for the dropdown
+        $latest = array_slice($latest, 0, 5);
+        
+        echo json_encode([
+            'status' => 'success',
+            'count' => $unreadCount,
+            'total' => $totalCount,
+            'notifications' => $latest
+        ]);
+        exit;
+    }
+
+    public function markNotificationsRead()
+    {
+        Auth::role(['admin']);
+        header('Content-Type: application/json');
+        
+        $paymentModel = $this->model('Payment');
+        $success = $paymentModel->markAllAsRead();
+        
+        echo json_encode([
+            'status' => $success ? 'success' : 'error'
+        ]);
+        exit;
     }
 }

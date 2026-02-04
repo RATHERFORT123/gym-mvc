@@ -135,6 +135,30 @@ public function verifyOtp()
             $_SESSION['role'] = $newUser['role'];
         }
 
+        // Send Welcome Email
+        $userName = $_SESSION['register']['name'] ?? 'Guest';
+        $userEmail = $_SESSION['register']['email'];
+        $subject = "Welcome to SGSIT Gym!";
+        $message = "
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+                <h2 style='color: #0d6efd;'>Welcome to the Family, $userName!</h2>
+                <p>We are thrilled to have you join the <strong>SGSIT Gym</strong>. Your account has been successfully verified and created.</p>
+                <p>You can now log in to:</p>
+                <ul style='color: #444;'>
+                    <li>Access your personalized Diet and Workout plans.</li>
+                    <li>Mark your daily attendance via QR code.</li>
+                    <li>Track your fitness progress and membership details.</li>
+                </ul>
+                <div style='text-align: center; margin: 30px 0;'>
+                    <a href='" . BASE_URL . "/user/dashboard' style='background-color: #0d6efd; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Go to My Dashboard</a>
+                </div>
+                <p style='color: #666;'>We're excited to be part of your fitness journey!</p>
+                <hr style='border: 0; border-top: 1px solid #eee; margin-top: 30px;'>
+                <p style='font-size: 0.8rem; color: #999; text-align: center;'>SGSIT Gym Management System</p>
+            </div>
+        ";
+        Mailer::send($userEmail, $subject, $message);
+
         unset($_SESSION['register'], $_SESSION['otp_sent']);
 
         // Redirect to profile edit to complete details

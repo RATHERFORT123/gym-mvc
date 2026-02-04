@@ -93,6 +93,8 @@
     }
 </style>
 
+</main>
+
 <footer class="custom-footer mt-auto">
     <div class="container text-center position-relative" style="z-index: 1;">
         

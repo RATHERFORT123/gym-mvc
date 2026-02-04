@@ -10,8 +10,8 @@ class Payment extends Model
      */
     public function create($data)
     {
-        $sql = "INSERT INTO payments (user_id, plan_id, amount, payment_method, upi_id, status) 
-                VALUES (?, ?, ?, ?, ?, 'pending')";
+        $sql = "INSERT INTO payments (user_id, plan_id, amount, payment_method, upi_id, status, is_read) 
+                VALUES (?, ?, ?, ?, ?, 'pending', 0)";
         
         $stmt = $this->db->prepare($sql);
         $success = $stmt->execute([
@@ -108,6 +108,28 @@ class Payment extends Model
         ");
         $stmt->execute([$userId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getUnreadCount()
+    {
+        $stmt = $this->db->prepare("SELECT COUNT(*) as total FROM payments WHERE status = 'pending' AND is_read = 0");
+        $stmt->execute();
+        $res = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int) ($res['total'] ?? 0);
+    }
+
+    public function markAllAsRead()
+    {
+        $stmt = $this->db->prepare("UPDATE payments SET is_read = 1 WHERE status = 'pending' AND is_read = 0");
+        return $stmt->execute();
+    }
+
+    public function getPendingCount()
+    {
+        $stmt = $this->db->prepare("SELECT COUNT(*) as total FROM payments WHERE status = 'pending'");
+        $stmt->execute();
+        $res = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int) ($res['total'] ?? 0);
     }
 
     /**

@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
     <style>
         :root {
@@ -145,6 +146,53 @@
 }
 
         }
+
+        /* ===== NOTIFICATION BELL ===== */
+        .nav-item.dropdown .fa-bell {
+            font-size: 1.2rem;
+            color: var(--text-dark);
+            transition: color 0.3s;
+        }
+        .nav-item.dropdown:hover .fa-bell {
+            color: var(--bhagua);
+        }
+        .badge-notification {
+            position: absolute;
+            top: 0;
+            right: 5px;
+            font-size: 0.65rem;
+            padding: 2px 5px;
+            border-radius: 50%;
+        }
+        .notification-dropdown {
+            width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 10px 0;
+        }
+        .notification-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f8f9fa;
+            transition: background 0.2s;
+            cursor: pointer;
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+        .notification-item:hover {
+            background-color: #f8f9fa;
+            color: var(--bhagua);
+        }
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+        .notification-item .time {
+            font-size: 0.75rem;
+            color: #adb5bd;
+        }
     </style>
 </head>
 
@@ -177,6 +225,20 @@
                 <?php if (isset($_SESSION['role'])): ?>
 
                     <?php if ($_SESSION['role'] === 'admin'): ?>
+                        <li class="nav-item dropdown me-2">
+                            <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-bell"></i>
+                                <span id="notificationBadge" class="badge bg-danger badge-notification d-none">0</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown" id="notificationList">
+                                <h6 class="dropdown-header">Notifications</h6>
+                                <div id="notificationItems">
+                                    <div class="text-center py-3 text-muted">No new notifications</div>
+                                </div>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item text-center small text-primary" href="<?= BASE_URL ?>/admin/payments">View All Payments</a>
+                            </div>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link" href="<?= BASE_URL ?>/admin/dashboard">Dashboard</a>
                         </li>
@@ -230,7 +292,7 @@
     </div>
 </nav>
 
-<div style="margin-top: 100px;"></div>
+<div style="margin-top: 30px;"></div>
 
 <main class="flex-grow-1 container py-4">
     <?php if (isset($_SESSION['flash_success'])): ?>
@@ -256,7 +318,6 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <?php endif; ?>
-    </main>
 
 <script>
 /* Scroll Animation */
@@ -292,6 +353,65 @@ document.getElementById('markAttendanceBtn')?.addEventListener('click', function
         }
     });
 });
+
+/* Notification Logic for Admin */
+<?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+function fetchNotifications() {
+    fetch('<?= BASE_URL ?>/admin/getNotifications')
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            const badge = document.getElementById('notificationBadge');
+            const itemsContainer = document.getElementById('notificationItems');
+            
+            if (data.count > 0) {
+                badge.textContent = data.count > 99 ? '99+' : data.count;
+                badge.classList.remove('d-none');
+            } else {
+                badge.classList.add('d-none');
+            }
+            
+            if (data.total > 0) {
+                let html = '';
+                data.notifications.forEach(notif => {
+                    html += `
+                        <a href="<?= BASE_URL ?>/admin/payments" class="notification-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong>New Payment</strong>
+                                <span class="time">${notif.created_at}</span>
+                            </div>
+                            <div class="small text-truncate">
+                                ${notif.user_name} paid ₹${parseFloat(notif.amount).toLocaleString()} for ${notif.plan_name}
+                            </div>
+                        </a>
+                    `;
+                });
+                itemsContainer.innerHTML = html;
+            } else {
+                itemsContainer.innerHTML = '<div class="text-center py-3 text-muted">No new notifications</div>';
+            }
+        }
+    })
+    .catch(err => console.error('Error fetching notifications:', err));
+}
+
+// Mark as read when dropdown is opened
+document.getElementById('notificationDropdown')?.addEventListener('show.bs.dropdown', function () {
+    const badge = document.getElementById('notificationBadge');
+    if (!badge.classList.contains('d-none')) {
+        fetch('<?= BASE_URL ?>/admin/markNotificationsRead')
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                badge.classList.add('d-none');
+            }
+        });
+    }
+});
+
+// Fetch immediately and then every 30 seconds
+fetchNotifications();
+setInterval(fetchNotifications, 30000);
+<?php endif; ?>
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

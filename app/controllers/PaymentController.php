@@ -366,6 +366,30 @@ class PaymentController extends Controller
 
         $subscription_id = $pdo->lastInsertId();
 
+        // Send Payment Received Email
+        $userModel = $this->model('User');
+        $user = $userModel->getById($_SESSION['user_id']);
+        if ($user) {
+            $subject = "Payment Details Received - SGSIT Gym";
+            $message = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+                    <h2 style='color: #0d6efd;'>Payment Received!</h2>
+                    <p>Hello " . htmlspecialchars($user['name']) . ",</p>
+                    <p>We've received your transaction details for the plan <strong>" . htmlspecialchars($planMaster['name']) . "</strong>.</p>
+                    <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                        <p style='margin: 5px 0;'><strong>Transaction ID (UTR):</strong> $utr</p>
+                        <p style='margin: 5px 0;'><strong>Amount Paid:</strong> ₹" . number_format($planMaster['price_user'] ?? $planMaster['price_faculty'] ?? 0, 2) . "</p>
+                        <p style='margin: 5px 0;'><strong>Status:</strong> Under Review</p>
+                    </div>
+                    <p>Our team is now verifying your payment. Your gym access and personalized plans will be activated as soon as the verification is complete.</p>
+                    <p>Typically, this takes less than 24 hours.</p>
+                    <hr style='border: 0; border-top: 1px solid #eee; margin-top: 30px;'>
+                    <p style='font-size: 0.8rem; color: #999; text-align: center;'>SGSIT Gym Management System</p>
+                </div>
+            ";
+            Mailer::send($user['email'], $subject, $message);
+        }
+
         header('Location: ' . BASE_URL . '/payment/success/' . $subscription_id);
         exit;
     }

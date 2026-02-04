@@ -1,7 +1,7 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 
 <div class="row">
-    <div class="col-md-8 mx-auto">
+    <div class="col-md-8 mx-auto mt-5">
         <div class="card mb-4 bg-dark text-white">
             <div class="card-body">
                 <h4 class="text-primary">Global Payment Settings</h4>
@@ -32,6 +32,7 @@
                             <th>Name</th>
                             <th>Price (User)</th>
                             <th>Price (Faculty)</th>
+                            <th>Validity</th>
                             <th>Unique UPI</th>
                             <th class="text-center">Action</th>
                         </tr>
@@ -43,6 +44,7 @@
                                 <td><?= htmlspecialchars($p['name']) ?></td>
                                 <td>₹<?= number_format($p['price_user']) ?></td>
                                 <td>₹<?= number_format($p['price_faculty']) ?></td>
+                                <td><?= htmlspecialchars($p['duration_days']) ?> Days</td>
                                 <td><?= htmlspecialchars($p['upi_id'] ?? 'Default') ?></td>
                                 <td class="text-center">
                                     <div class="btn-group">
@@ -98,6 +100,10 @@
                         </div>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Validity (Number of Days)</label>
+                        <input type="number" name="duration_days" id="planDuration" class="form-control" required placeholder="e.g. 30" min="1">
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Custom UPI ID (Optional)</label>
                         <input type="text" name="upi_id" id="planUpi" class="form-control" placeholder="upi@bank (blank for default)">
                     </div>
@@ -119,6 +125,7 @@ function prepareAdd() {
     document.getElementById('planKey').value = '';
     document.getElementById('planPriceUser').value = '';
     document.getElementById('planPriceFaculty').value = '';
+    document.getElementById('planDuration').value = '30';
     document.getElementById('planUpi').value = '';
 }
 
@@ -129,6 +136,7 @@ function prepareEdit(plan) {
     document.getElementById('planKey').value = plan.plan_key;
     document.getElementById('planPriceUser').value = plan.price_user;
     document.getElementById('planPriceFaculty').value = plan.price_faculty;
+    document.getElementById('planDuration').value = plan.duration_days;
     document.getElementById('planUpi').value = plan.upi_id || '';
     
     // Open modal programmatically

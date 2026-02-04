@@ -104,6 +104,7 @@ class Database
             name VARCHAR(100) NOT NULL,
             price_user DECIMAL(10,2) NOT NULL DEFAULT 0,
             price_faculty DECIMAL(10,2) NOT NULL DEFAULT 0,
+            duration_days INT NOT NULL DEFAULT 30,
             upi_id VARCHAR(100) DEFAULT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -121,8 +122,8 @@ class Database
             payer_upi VARCHAR(100) DEFAULT NULL,
             utr_number VARCHAR(50) DEFAULT NULL,
 
-            status ENUM('pending','verified','failed') DEFAULT 'pending',
-
+            status ENUM('pending','verified','rejected') DEFAULT 'pending',
+            is_read TINYINT(1) DEFAULT 0,
             paid_at DATETIME DEFAULT NULL,
             verified_at DATETIME DEFAULT NULL,
 
@@ -209,8 +210,18 @@ class Database
                 self::$pdo->exec("ALTER TABLE user_profiles DROP COLUMN qualification");
             } catch (Exception $e) {}
             try {
-                self::$pdo->exec("ALTER TABLE user_profiles DROP COLUMN experience_years");
+                self::$pdo->exec("ALTER TABLE user_profiles MODIFY COLUMN gender ENUM('Male', 'Female', 'Other') NULL");
             } catch (Exception $e) {}
+
+            // Add duration_days to plans_master
+            try {
+                self::$pdo->exec("ALTER TABLE plans_master ADD COLUMN duration_days INT NOT NULL DEFAULT 30");
+            } catch (Exception $e) { /* Column might already exist */ }
+
+            // Add is_read to payments
+            try {
+                self::$pdo->exec("ALTER TABLE payments ADD COLUMN is_read TINYINT(1) DEFAULT 0 AFTER status");
+            } catch (Exception $e) { /* Column might already exist */ }
 
         } catch (Exception $e) {}
 
