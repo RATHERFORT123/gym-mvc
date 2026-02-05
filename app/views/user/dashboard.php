@@ -50,6 +50,89 @@
 
     .slide-overlay h2 { font-family: 'Montserrat'; font-weight: 800; color: var(--bhagua); }
 
+    /* Event Slide Styles */
+.event-slide {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1e272e 0%, #2f3640 50%, #0fbcf9 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 30px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.event-slide:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+}
+
+.event-content {
+    text-align: center;
+    color: white;
+    max-width: 600px;
+    animation: fadeInUp 1s ease forwards;
+}
+
+/* Event Header (Icon + Title inline) */
+.event-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px; /* space between icon and title */
+    margin-bottom: 20px;
+}
+
+.event-icon {
+    font-size: 3.5rem;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.event-content h2 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    color: #0fbcf9;
+    font-size: 2rem;
+    margin: 0; /* remove default margin so icon aligns perfectly */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.event-content p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 25px;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.event-date {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.9);
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.event-date:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
+
     /* ===== UI CARDS & GLASS ===== */
     .dashboard-container { animation: fadeInUp 0.8s ease; }
     
@@ -153,20 +236,42 @@
 
     <div class="swiper hero-swiper">
         <div class="swiper-wrapper">
-            <div class="swiper-slide">
-                <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop" alt="Gym">
-                <div class="slide-overlay">
-                    <h2>Push Your Limits</h2>
-                    <p>New supplements and equipment arriving this week.</p>
+            <?php if (!empty($activeEvents)): ?>
+                <!-- Display Active Events -->
+                <?php foreach ($activeEvents as $event): ?>
+                    <div class="swiper-slide">
+                        <div class="event-slide">
+                            <div class="event-content">
+                                <div class="event-header">
+                                    <span class="event-icon">📢</span>
+                                    <h2><?= htmlspecialchars($event['title']) ?></h2>
+                                </div>
+                                <p><?= htmlspecialchars($event['description'] ?? '') ?></p>
+                                <small class="event-date">
+                                    <i class="far fa-calendar-alt me-1"></i>
+                                    Posted on <?= date('M d, Y', strtotime($event['created_at'])) ?>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <!-- Default Slides -->
+                <div class="swiper-slide">
+                    <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop" alt="Gym">
+                    <div class="slide-overlay">
+                        <h2>Push Your Limits</h2>
+                        <p>New supplements and equipment arriving this week.</p>
+                    </div>
                 </div>
-            </div>
-            <div class="swiper-slide">
-                <img src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=1470&auto=format&fit=crop" alt="Workout">
-                <div class="slide-overlay">
-                    <h2>Stay Consistent</h2>
-                    <p>Track your attendance daily to win 'Member of the Month'.</p>
+                <div class="swiper-slide">
+                    <img src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=1470&auto=format&fit=crop" alt="Workout">
+                    <div class="slide-overlay">
+                        <h2>Stay Consistent</h2>
+                        <p>Track your attendance daily to win 'Member of the Month'.</p>
+                    </div>
                 </div>
-            </div>
+            <?php endif; ?>
         </div>
         <div class="swiper-pagination"></div>
     </div>

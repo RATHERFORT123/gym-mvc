@@ -72,7 +72,8 @@ public function updateProfile($userId, $data, $role)
                         birth_date = ?,
                         blood_group = ?,
                         bmi_index = ?,
-                        waist_size = ?
+                        waist_size = ?,
+                        employee_code = ?
                     WHERE user_id = ?";
         } else {
             $sql = "INSERT INTO user_profiles
@@ -80,8 +81,8 @@ public function updateProfile($userId, $data, $role)
                      height_cm, weight_kg, fitness_goal,
                      department, position, subject_expert,
                      middle_name, gender, birth_date, blood_group,
-                     bmi_index, waist_size, user_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                     bmi_index, waist_size, employee_code, user_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         }
 
         $params = [
@@ -100,6 +101,7 @@ public function updateProfile($userId, $data, $role)
             $data['blood_group'] ?? null,
             $data['bmi_index'] ?? null,
             $data['waist_size'] ?? null,
+            $data['employee_code'] ?? null,
             $userId
         ];
     }
@@ -156,6 +158,7 @@ public function updateProfile($userId, $data, $role)
             $data['blood_group'] ?? null,
             $data['bmi_index'] ?? null,
             $data['waist_size'] ?? null,
+            $data['employee_code'] ?? null,
             $userId
         ];
     }
@@ -217,7 +220,7 @@ public function updateProfile($userId, $data, $role)
                    p.fitness_goal, p.height_cm, p.weight_kg 
             FROM users u 
             LEFT JOIN user_profiles p ON u.id = p.user_id 
-            WHERE u.role != 'admin'
+            WHERE u.role = 'user'
         ";
 
         $params = [];
@@ -244,7 +247,54 @@ public function updateProfile($userId, $data, $role)
 
     public function getTotalUserCount($search = '')
     {
-        $sql = "SELECT COUNT(*) FROM users u WHERE u.role != 'admin'";
+        $sql = "SELECT COUNT(*) FROM users u WHERE u.role = 'user'";
+        $params = [];
+        
+        if (!empty($search)) {
+            $sql .= " AND (u.name LIKE ? OR u.email LIKE ?)";
+            $params = ["%$search%", "%$search%"];
+        }
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchColumn();
+    }
+
+    public function getPaginatedFaculty($limit, $offset, $search = '')
+    {
+        $sql = "
+            SELECT u.id, u.name, u.email, u.role, u.is_active, 
+                   p.fitness_goal, p.height_cm, p.weight_kg, p.department 
+            FROM users u 
+            LEFT JOIN user_profiles p ON u.id = p.user_id 
+            WHERE u.role = 'faculty'
+        ";
+
+        $params = [];
+        if (!empty($search)) {
+            $sql .= " AND (u.name LIKE ? OR u.email LIKE ?)";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+        }
+
+        $sql .= " ORDER BY u.created_at DESC LIMIT ? OFFSET ?";
+        
+        $stmt = $this->db->prepare($sql);
+        
+        $paramCount = count($params);
+        for ($i = 0; $i < $paramCount; $i++) {
+            $stmt->bindValue($i + 1, $params[$i]);
+        }
+        
+        $stmt->bindValue($paramCount + 1, (int)$limit, PDO::PARAM_INT);
+        $stmt->bindValue($paramCount + 2, (int)$offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getTotalFacultyCount($search = '')
+    {
+        $sql = "SELECT COUNT(*) FROM users u WHERE u.role = 'faculty'";
         $params = [];
         
         if (!empty($search)) {

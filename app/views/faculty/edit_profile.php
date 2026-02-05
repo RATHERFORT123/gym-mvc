@@ -174,17 +174,17 @@
                     <div class="col-md-4">
                         <label class="form-label">First Name</label>
                         <input type="text" name="first_name" class="form-control" 
-                               value="<?= $profile['first_name'] ?? '' ?>" required placeholder="Enter first name">
+                               value="<?= $profile['first_name'] ?? '' ?>" required pattern="[A-Za-z\s]+" title="Only alphabets allowed" placeholder="Enter first name">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Middle Name</label>
                         <input type="text" name="middle_name" class="form-control" 
-                               value="<?= $profile['middle_name'] ?? '' ?>" placeholder="Optional">
+                               value="<?= $profile['middle_name'] ?? '' ?>" pattern="[A-Za-z\s]+" title="Only alphabets allowed" placeholder="Optional">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Last Name</label>
                         <input type="text" name="last_name" class="form-control" 
-                               value="<?= $profile['last_name'] ?? '' ?>" required placeholder="Enter last name">
+                               value="<?= $profile['last_name'] ?? '' ?>" required pattern="[A-Za-z\s]+" title="Only alphabets allowed" placeholder="Enter last name">
                     </div>
 
                     <div class="col-md-4">
@@ -267,12 +267,17 @@
                 </div>
 
                 <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                        <label class="form-label">Employee Code</label>
+                        <input type="text" name="employee_code" class="form-control" 
+                               value="<?= $profile['employee_code'] ?? '' ?>" placeholder="e.g. EMP001">
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label">Department</label>
                         <input type="text" name="department" class="form-control" 
                                value="<?= $profile['department'] ?? '' ?>" required placeholder="e.g. IT Department">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label">Position</label>
                         <select name="position" class="form-select" required>
                             <option value="">Select Position</option>

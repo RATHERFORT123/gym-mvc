@@ -43,7 +43,6 @@
                     <thead class="table-dark">
                         <tr>
                             <th>Name</th>
-                            <th>Role</th>
                             <th>Fitness Goal</th>
                             <th>BMI Stats</th>
                             <th>Status</th>
@@ -62,7 +61,6 @@
                                         <strong><?= htmlspecialchars($user['name']) ?></strong><br>
                                         <small class="text-muted"><?= htmlspecialchars($user['email']) ?></small>
                                     </td>
-                                    <td><span class="badge bg-secondary"><?= ucfirst($user['role']) ?></span></td>
                                     <td>
                                         <?php if($user['fitness_goal']): ?>
                                             <span class="badge bg-info text-dark"><?= $user['fitness_goal'] ?></span>
@@ -112,13 +110,13 @@
                                             <?php endif; ?>
 
                                             <a href="<?= BASE_URL ?>/admin/deleteUser/<?= $user['id'] ?>" class="btn btn-danger btn-sm mb-3" onclick="return confirm('Are you sure?')">
-                                                🗑️
+                                                🗑️ Delete
                                             </a>
                                         </div>
                                     </td>
                                 </tr>
                         <?php endforeach; ?>
-                        
+
                         <?php endif; ?>
                     </tbody>
                 </table>

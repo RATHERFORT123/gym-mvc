@@ -67,6 +67,7 @@ class Database
             department VARCHAR(100) NULL,
             position VARCHAR(100) NULL,
             subject_expert VARCHAR(150) NULL,
+            employee_code VARCHAR(50) NULL,
 
             middle_name VARCHAR(50) NULL,
             gender ENUM('Male', 'Female', 'Other') NULL,
@@ -104,6 +105,7 @@ class Database
             name VARCHAR(100) NOT NULL,
             price_user DECIMAL(10,2) NOT NULL DEFAULT 0,
             price_faculty DECIMAL(10,2) NOT NULL DEFAULT 0,
+            price_female DECIMAL(10,2) NOT NULL DEFAULT 0,
             duration_days INT NOT NULL DEFAULT 30,
             upi_id VARCHAR(100) DEFAULT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -113,7 +115,7 @@ class Database
             id INT AUTO_INCREMENT PRIMARY KEY,
 
             user_id INT NOT NULL,
-            plan_id INT NOT NULL,
+            plan_id INT NULL,
             amount DECIMAL(10,2) NOT NULL,
 
             payment_method ENUM('upi') DEFAULT 'upi',
@@ -131,13 +133,13 @@ class Database
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-            FOREIGN KEY (plan_id) REFERENCES plans_master(id) ON DELETE CASCADE
+            FOREIGN KEY (plan_id) REFERENCES plans_master(id) ON DELETE SET NULL
         );
 
         CREATE TABLE IF NOT EXISTS user_subscriptions (
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT NOT NULL,
-            plan_id INT NOT NULL,
+            plan_id INT NULL,
             payment_id INT NOT NULL,
 
             start_date DATE NOT NULL,
@@ -149,7 +151,7 @@ class Database
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-            FOREIGN KEY (plan_id) REFERENCES plans_master(id) ON DELETE CASCADE,
+            FOREIGN KEY (plan_id) REFERENCES plans_master(id) ON DELETE SET NULL,
             FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE CASCADE
         );
 
@@ -167,6 +169,15 @@ class Database
             id INT AUTO_INCREMENT PRIMARY KEY,
             setting_key VARCHAR(50) UNIQUE,
             setting_value TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS events (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            description TEXT,
+            status ENUM('active', 'inactive') DEFAULT 'inactive',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         );
         ";
@@ -196,7 +207,8 @@ class Database
                 "birth_date"   => "DATE NULL",
                 "blood_group"  => "VARCHAR(10) NULL",
                 "bmi_index"    => "DECIMAL(5,2) NULL",
-                "waist_size"   => "DECIMAL(5,2) NULL"
+                "waist_size"   => "DECIMAL(5,2) NULL",
+                "employee_code" => "VARCHAR(50) NULL"
             ];
 
             foreach ($cols as $col => $type) {
@@ -216,6 +228,11 @@ class Database
             // Add duration_days to plans_master
             try {
                 self::$pdo->exec("ALTER TABLE plans_master ADD COLUMN duration_days INT NOT NULL DEFAULT 30");
+            } catch (Exception $e) { /* Column might already exist */ }
+
+            // Add price_female to plans_master
+            try {
+                self::$pdo->exec("ALTER TABLE plans_master ADD COLUMN price_female DECIMAL(10,2) NOT NULL DEFAULT 0 AFTER price_faculty");
             } catch (Exception $e) { /* Column might already exist */ }
 
             // Add is_read to payments
@@ -238,9 +255,9 @@ class Database
 
         try {
             $defaults = [
-                ['1m','1 Month',199,199],
-                ['3m','3 Months',499,499],
-                ['6m','6 Months',899,899],
+                ['1m','1 Month',199,199,199],
+                ['3m','3 Months',499,499,499],
+                ['6m','6 Months',899,899,899],
             ];
 
             foreach ($defaults as $d) {
@@ -249,10 +266,10 @@ class Database
 
                 if ($stmt->fetchColumn() == 0) {
                     $ins = self::$pdo->prepare(
-                        "INSERT INTO plans_master (plan_key,name,price_user,price_faculty,upi_id)
-                         VALUES (?,?,?,?,?)"
+                        "INSERT INTO plans_master (plan_key,name,price_user,price_faculty,price_female,upi_id)
+                         VALUES (?,?,?,?,?,?)"
                     );
-                    $ins->execute([$d[0],$d[1],$d[2],$d[3],defined('UPI_ID') ? UPI_ID : null]);
+                    $ins->execute([$d[0],$d[1],$d[2],$d[3],$d[4],defined('UPI_ID') ? UPI_ID : null]);
                 }
             }
         } catch (Exception $e) {}

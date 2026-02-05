@@ -34,12 +34,18 @@ class PaymentController extends Controller
         // Fetch master plans from DB
         $plans = $planModel->getAllMasterPlans();
 
+        // Fetch user gender to display correct price in view
+        $userModel = $this->model('User');
+        $userProfile = $userModel->getProfile($_SESSION['user_id']);
+        $userGender = $userProfile['gender'] ?? 'Male';
+
         $this->view('subscription/plans', [
             'plans' => $plans,
             'currentPlan' => $currentPlan,
             'daysLeft' => $daysLeft,
             'preselect' => $preselect,
-            'hasActiveVerifiedSubscription' => $hasActiveVerifiedSubscription
+            'hasActiveVerifiedSubscription' => $hasActiveVerifiedSubscription,
+            'userGender' => $userGender
         ]);
     }
 
@@ -71,7 +77,19 @@ class PaymentController extends Controller
 
         // determine amount based on role
         $role = $_SESSION['role'] ?? 'user';
-        $price = $planModel->getPriceByRole($key, $role);
+        
+        // Determine price based on role AND gender
+        $userModel = $this->model('User');
+        $userProfile = $userModel->getProfile($_SESSION['user_id']);
+        $gender = $userProfile['gender'] ?? 'Male';
+
+        if ($role === 'faculty') {
+            $price = $planRow['price_faculty'];
+        } elseif ($role === 'user' && $gender === 'Female') {
+            $price = $planRow['price_female'];
+        } else {
+            $price = $planRow['price_user'];
+        }
         
         $global_upi = $planModel->getSetting('global_upi') ?: UPI_ID;
 
@@ -128,7 +146,19 @@ class PaymentController extends Controller
 
         // determine amount based on role (guest => user)
         $role = $_SESSION['role'] ?? 'user';
-        $price = $planModel->getPriceByRole($key, $role);
+        
+        // Determine price based on role AND gender
+        $userModel = $this->model('User');
+        $userProfile = $userModel->getProfile($_SESSION['user_id']);
+        $gender = $userProfile['gender'] ?? 'Male';
+
+        if ($role === 'faculty') {
+            $price = $planRow['price_faculty'];
+        } elseif ($role === 'user' && $gender === 'Female') {
+            $price = $planRow['price_female'];
+        } else {
+            $price = $planRow['price_user'];
+        }
         
         $global_upi = $planModel->getSetting('global_upi') ?: UPI_ID;
 
@@ -233,7 +263,7 @@ class PaymentController extends Controller
             // Update existing payment with UTR
             $now = date('Y-m-d H:i:s');
             try {
-                $stmt = $pdo->prepare("UPDATE payments SET utr_number = ?, payer_upi = ?, status = 'pending', paid_at = ? WHERE id = ?");
+                $stmt = $pdo->prepare("UPDATE payments SET utr_number = ?, payer_upi = ?, status = 'pending', paid_at = ?, is_read = 0 WHERE id = ?");
                 $stmt->execute([$utr, $payer_upi, $now, $payment_id]);
             } catch (PDOException $e) {
                 // Handle duplicate key / constraint violation gracefully
@@ -281,13 +311,25 @@ class PaymentController extends Controller
 
             // Determine amount based on role
             $role = $_SESSION['role'] ?? 'user';
-            $price = $planModel->getPriceByRole($planRow['plan_key'], $role);
+            // Determine price based on role AND gender
+            $userModel = $this->model('User');
+            $userProfile = $userModel->getProfile($_SESSION['user_id']);
+            $gender = $userProfile['gender'] ?? 'Male';
+
+            if ($role === 'faculty') {
+                $price = $planRow['price_faculty'];
+            } elseif ($role === 'user' && $gender === 'Female') {
+                $price = $planRow['price_female'];
+            } else {
+                $price = $planRow['price_user'];
+            }
+
             $global_upi = $planModel->getSetting('global_upi') ?: UPI_ID;
 
             // Create payment record WITH UTR and payer_upi in one INSERT
             $now = date('Y-m-d H:i:s');
             try {
-                $stmt = $pdo->prepare("INSERT INTO payments (user_id, plan_id, amount, payment_method, upi_id, utr_number, payer_upi, status, paid_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)");
+                $stmt = $pdo->prepare("INSERT INTO payments (user_id, plan_id, amount, payment_method, upi_id, utr_number, payer_upi, status, paid_at, is_read) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, 0)");
                 $stmt->execute([
                     $_SESSION['user_id'],
                     $planRow['id'],
@@ -479,7 +521,7 @@ class PaymentController extends Controller
         }
 
         $pdo = Database::getInstance();
-        $stmt = $pdo->prepare("SELECT us.*, p.amount, p.utr_number, up.name as plan_name FROM user_subscriptions us JOIN payments p ON p.id = us.payment_id JOIN plans_master up ON up.id = us.plan_id WHERE us.id = ? AND us.user_id = ?");
+        $stmt = $pdo->prepare("SELECT us.*, p.amount, p.utr_number, up.name as plan_name FROM user_subscriptions us JOIN payments p ON p.id = us.payment_id LEFT JOIN plans_master up ON up.id = us.plan_id WHERE us.id = ? AND us.user_id = ?");
         $stmt->execute([$id, $_SESSION['user_id']]);
         $sub = $stmt->fetch(PDO::FETCH_ASSOC);
 

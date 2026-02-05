@@ -34,12 +34,12 @@ public function dashboard()
         Auth::role(['admin']);
 
         $userModel = $this->model('User');
-        
+
         $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
         if (!in_array($limit, [10, 25, 50, 75, 100])) $limit = 10;
-        
+
         $search = isset($_GET['search']) ? trim($_GET['search']) : '';
-        
+
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         if ($page < 1) $page = 1;
         $offset = ($page - 1) * $limit;
@@ -57,18 +57,32 @@ public function dashboard()
         ]);
     }
 
-    // ==========================
-    // MANAGE FACULTY
-    // ==========================
     public function faculty()
     {
         Auth::role(['admin']);
 
         $userModel = $this->model('User');
-        // ONLY role = faculty
-        $faculty = $userModel->getUsersByRole('faculty');
+        
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        if (!in_array($limit, [10, 25, 50, 75, 100])) $limit = 10;
 
-        $this->view('admin/faculty', ['users' => $faculty]);
+        $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        if ($page < 1) $page = 1;
+        $offset = ($page - 1) * $limit;
+
+        $faculty = $userModel->getPaginatedFaculty($limit, $offset, $search);
+        $totalFaculty = $userModel->getTotalFacultyCount($search);
+        $totalPages = ceil($totalFaculty / $limit);
+
+        $this->view('admin/faculty', [
+            'users' => $faculty,
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'limit' => $limit,
+            'search' => $search
+        ]);
     }
 
     // ==========================
@@ -142,7 +156,7 @@ public function dashboard()
             SELECT p.*, u.name as user_name, u.email as user_email, pm.name as plan_name 
             FROM payments p 
             JOIN users u ON u.id = p.user_id 
-            JOIN plans_master pm ON pm.id = p.plan_id 
+            LEFT JOIN plans_master pm ON pm.id = p.plan_id 
             ORDER BY p.created_at DESC
         ");
         $stmt->execute();
@@ -242,10 +256,11 @@ public function dashboard()
             $plan_key = $_POST['plan_key'] ?? null;
             $price_user = $_POST['price_user'] ?? 0;
             $price_faculty = $_POST['price_faculty'] ?? 0;
+            $price_female = $_POST['price_female'] ?? 0;
 
             if ($plan_key) {
                 $upi_id = $_POST['upi_id'] ?? null;
-                $this->model('Plan')->updateMasterDetails($plan_key, $price_user, $price_faculty, $upi_id);
+                $this->model('Plan')->updateMasterDetails($plan_key, $price_user, $price_faculty, $upi_id, $price_female);
             }
         }
         header("Location: " . BASE_URL . "/admin/plans");
@@ -275,6 +290,7 @@ public function dashboard()
                 'name' => $_POST['name'],
                 'price_user' => $_POST['price_user'],
                 'price_faculty' => $_POST['price_faculty'],
+                'price_female' => $_POST['price_female'] ?? 0,
                 'duration_days' => $_POST['duration_days'] ?? 30,
                 'upi_id' => !empty($_POST['upi_id']) ? $_POST['upi_id'] : null
             ];
@@ -487,6 +503,84 @@ public function attendanceCalendar($userId)
         echo json_encode([
             'status' => $success ? 'success' : 'error'
         ]);
+        exit;
+    }
+
+    // ==========================
+    // EVENT MANAGEMENT
+    // ==========================
+    public function events()
+    {
+        Auth::role(['admin']);
+        $eventModel = $this->model('Event');
+        $events = $eventModel->getAll();
+        $this->view('admin/events', ['events' => $events]);
+    }
+
+    public function createEvent()
+    {
+        Auth::role(['admin']);
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = [
+                'title' => $_POST['title'] ?? '',
+                'description' => $_POST['description'] ?? '',
+                'status' => $_POST['status'] ?? 'inactive'
+            ];
+            
+            $eventModel = $this->model('Event');
+            $eventModel->create($data);
+            
+            header('Location: ' . BASE_URL . '/admin/events');
+            exit;
+        }
+        
+        $this->view('admin/create_event');
+    }
+
+    public function editEvent($id)
+    {
+        Auth::role(['admin']);
+        
+        $eventModel = $this->model('Event');
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = [
+                'title' => $_POST['title'] ?? '',
+                'description' => $_POST['description'] ?? '',
+                'status' => $_POST['status'] ?? 'inactive'
+            ];
+            
+            $eventModel->update($id, $data);
+            
+            header('Location: ' . BASE_URL . '/admin/events');
+            exit;
+        }
+        
+        $event = $eventModel->getById($id);
+        $this->view('admin/edit_event', ['event' => $event]);
+    }
+
+    public function toggleEventStatus($id)
+    {
+        Auth::role(['admin']);
+        
+        $status = $_GET['status'] ?? 'inactive';
+        $eventModel = $this->model('Event');
+        $eventModel->toggleStatus($id, $status);
+        
+        header('Location: ' . BASE_URL . '/admin/events');
+        exit;
+    }
+
+    public function deleteEvent($id)
+    {
+        Auth::role(['admin']);
+        
+        $eventModel = $this->model('Event');
+        $eventModel->delete($id);
+        
+        header('Location: ' . BASE_URL . '/admin/events');
         exit;
     }
 }

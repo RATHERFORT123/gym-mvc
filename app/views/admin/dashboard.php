@@ -40,6 +40,19 @@
                 </div>
             </div>
         </div>
+
+        <!-- Manage Events -->
+        <div class="col-md-4">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <h1 class="display-4 text-danger">📢</h1>
+                    <h5 class="card-title">Manage Events</h5>
+                    <p class="card-text text-muted">Create and manage gym events and announcements.</p>
+                    <a href="<?= BASE_URL ?>/admin/events" class="btn btn-danger">Go to Events</a>
+                </div>
+            </div>
+        </div>
+
         <!-- Manage Faculty (Placeholder) -->
        <div class="col-md-4">
     <div class="card shadow h-100">
@@ -122,4 +135,42 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to fetch notifications
+    function fetchNotifications() {
+        fetch('<?= BASE_URL ?>/admin/getNotifications')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Update Badge
+                    const badge = document.querySelector('#notification-badge');
+                    if (badge) {
+                        badge.textContent = data.count;
+                        badge.style.display = data.count > 0 ? 'inline-block' : 'none';
+                    }
+
+                    // Update List (if you have a container for it)
+                    const listContainer = document.querySelector('#notification-list');
+                    if (listContainer && data.notifications.length > 0) {
+                        let html = '';
+                        data.notifications.forEach(n => {
+                            html += `<li><a class="dropdown-item" href="<?= BASE_URL ?>/admin/payments">
+                                <small class="fw-bold">${n.user_name}</small><br>
+                                <small class="text-muted">Paid ₹${n.amount}</small>
+                            </a></li>`;
+                        });
+                        listContainer.innerHTML = html;
+                    }
+                }
+            });
+    }
+    // Poll every 30 seconds
+    setInterval(fetchNotifications, 30000);
+    // Initial call
+    fetchNotifications();
+});
+</script>
+
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

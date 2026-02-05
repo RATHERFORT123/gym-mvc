@@ -32,6 +32,7 @@
                             <th>Name</th>
                             <th>Price (User)</th>
                             <th>Price (Faculty)</th>
+                            <th>Price (Female)</th>
                             <th>Validity</th>
                             <th>Unique UPI</th>
                             <th class="text-center">Action</th>
@@ -44,6 +45,7 @@
                                 <td><?= htmlspecialchars($p['name']) ?></td>
                                 <td>₹<?= number_format($p['price_user']) ?></td>
                                 <td>₹<?= number_format($p['price_faculty']) ?></td>
+                                <td>₹<?= number_format($p['price_female'] ?? 0) ?></td>
                                 <td><?= htmlspecialchars($p['duration_days']) ?> Days</td>
                                 <td><?= htmlspecialchars($p['upi_id'] ?? 'Default') ?></td>
                                 <td class="text-center">
@@ -90,13 +92,17 @@
                         <input type="text" name="plan_key" id="planKey" class="form-control" required placeholder="e.g. 1m_silver">
                     </div>
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">Price (User)</label>
                             <input type="number" name="price_user" id="planPriceUser" class="form-control" required placeholder="0.00">
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">Price (Faculty)</label>
                             <input type="number" name="price_faculty" id="planPriceFaculty" class="form-control" required placeholder="0.00">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Price (Female)</label>
+                            <input type="number" name="price_female" id="planPriceFemale" class="form-control" required placeholder="0.00">
                         </div>
                     </div>
                     <div class="mb-3">
@@ -125,6 +131,7 @@ function prepareAdd() {
     document.getElementById('planKey').value = '';
     document.getElementById('planPriceUser').value = '';
     document.getElementById('planPriceFaculty').value = '';
+    document.getElementById('planPriceFemale').value = '';
     document.getElementById('planDuration').value = '30';
     document.getElementById('planUpi').value = '';
 }
@@ -136,9 +143,10 @@ function prepareEdit(plan) {
     document.getElementById('planKey').value = plan.plan_key;
     document.getElementById('planPriceUser').value = plan.price_user;
     document.getElementById('planPriceFaculty').value = plan.price_faculty;
+    document.getElementById('planPriceFemale').value = plan.price_female || 0;
     document.getElementById('planDuration').value = plan.duration_days;
     document.getElementById('planUpi').value = plan.upi_id || '';
-    
+
     // Open modal programmatically
     var myModal = new bootstrap.Modal(document.getElementById('planModal'));
     myModal.show();

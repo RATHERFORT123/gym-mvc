@@ -62,6 +62,13 @@ class AuthController extends Controller
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+            $name = $_POST['name'] ?? '';
+            // Validate Name (Alphabets only)
+            if (!preg_match("/^[a-zA-Z\s]+$/", $name)) {
+                $this->view('auth/register', ['error' => 'Name must contain only alphabets']);
+                return;
+            }
+
             $data = [
                 'name'     => $_POST['name'] ?? '',
                 'email'    => $_POST['email'] ?? '',

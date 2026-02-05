@@ -26,10 +26,15 @@ class UserController extends Controller
             $daysLeft = (int) floor(($end - $today) / 86400);
         }
 
+        // Fetch active events
+        $eventModel = $this->model('Event');
+        $activeEvents = $eventModel->getActive();
+
         $this->view('user/dashboard', [
             'showProfileAlert' => $showProfileAlert,
             'currentPlan' => $currentPlan,
-            'daysLeft' => $daysLeft
+            'daysLeft' => $daysLeft,
+            'activeEvents' => $activeEvents
         ]);
     }
 

@@ -253,15 +253,19 @@
             </div>
             <div class="pro-details-card">
                 <div class="row">
-                    <div class="col-md-4 mb-3 mb-md-0 text-center text-md-start">
+                    <div class="col-md-3 mb-3 mb-md-0 text-center text-md-start">
+                        <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Employee Code</small>
+                        <span class="fw-bold"><?= htmlspecialchars($profile['employee_code'] ?? '-') ?></span>
+                    </div>
+                    <div class="col-md-3 mb-3 mb-md-0 text-center text-md-start">
                         <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Department</small>
                         <span class="fw-bold"><?= htmlspecialchars($profile['department'] ?? '-') ?></span>
                     </div>
-                    <div class="col-md-4 mb-3 mb-md-0 text-center text-md-start">
+                    <div class="col-md-3 mb-3 mb-md-0 text-center text-md-start">
                         <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Current Position</small>
                         <span class="fw-bold"><?= htmlspecialchars($profile['position'] ?? '-') ?></span>
                     </div>
-                    <div class="col-md-4 text-center text-md-start">
+                    <div class="col-md-3 text-center text-md-start">
                         <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Expertise</small>
                         <span class="fw-bold"><?= htmlspecialchars($profile['subject_expert'] ?? '-') ?></span>
                     </div>

@@ -38,20 +38,21 @@ class Plan extends Model
         return $stmt->execute([$priceUser, $priceFaculty, $planKey]);
     }
 
-    public function updateMasterDetails($planKey, $priceUser, $priceFaculty, $upiId)
+    public function updateMasterDetails($planKey, $priceUser, $priceFaculty, $upiId, $priceFemale = 0)
     {
-        $stmt = $this->db->prepare("UPDATE plans_master SET price_user = ?, price_faculty = ?, upi_id = ? WHERE plan_key = ?");
-        return $stmt->execute([$priceUser, $priceFaculty, $upiId, $planKey]);
+        $stmt = $this->db->prepare("UPDATE plans_master SET price_user = ?, price_faculty = ?, price_female = ?, upi_id = ? WHERE plan_key = ?");
+        return $stmt->execute([$priceUser, $priceFaculty, $priceFemale, $upiId, $planKey]);
     }
 
     public function addMasterPlan($data)
     {
-        $stmt = $this->db->prepare("INSERT INTO plans_master (plan_key, name, price_user, price_faculty, duration_days, upi_id) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt = $this->db->prepare("INSERT INTO plans_master (plan_key, name, price_user, price_faculty, price_female, duration_days, upi_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
         return $stmt->execute([
             $data['plan_key'],
             $data['name'],
             $data['price_user'],
             $data['price_faculty'],
+            $data['price_female'] ?? 0,
             $data['duration_days'] ?? 30,
             $data['upi_id'] ?? null
         ]);
@@ -59,12 +60,13 @@ class Plan extends Model
 
     public function updateMasterFull($id, $data)
     {
-        $stmt = $this->db->prepare("UPDATE plans_master SET plan_key = ?, name = ?, price_user = ?, price_faculty = ?, duration_days = ?, upi_id = ? WHERE id = ?");
+        $stmt = $this->db->prepare("UPDATE plans_master SET plan_key = ?, name = ?, price_user = ?, price_faculty = ?, price_female = ?, duration_days = ?, upi_id = ? WHERE id = ?");
         return $stmt->execute([
             $data['plan_key'],
             $data['name'],
             $data['price_user'],
             $data['price_faculty'],
+            $data['price_female'] ?? 0,
             $data['duration_days'] ?? 30,
             $data['upi_id'] ?? null,
             $id

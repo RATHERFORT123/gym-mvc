@@ -143,9 +143,9 @@ class Payment extends Model
             SELECT p.*, u.name as user_name, u.email as user_email, pm.name as plan_name
             FROM payments p
             JOIN users u ON u.id = p.user_id
-            JOIN plans_master pm ON pm.id = p.plan_id
+            LEFT JOIN plans_master pm ON pm.id = p.plan_id
             WHERE p.status = 'pending'
-            ORDER BY p.created_at ASC
+            ORDER BY p.updated_at DESC
         ");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

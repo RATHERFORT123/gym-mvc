@@ -66,6 +66,17 @@ class ProfileController extends Controller
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+            // Validate Names (Alphabets only)
+            $fName = $_POST['first_name'] ?? '';
+            $lName = $_POST['last_name'] ?? '';
+            $mName = $_POST['middle_name'] ?? '';
+
+            if (!preg_match("/^[a-zA-Z\s]+$/", $fName) || !preg_match("/^[a-zA-Z\s]+$/", $lName) || (!empty($mName) && !preg_match("/^[a-zA-Z\s]+$/", $mName))) {
+                $_SESSION['error'] = "Names must contain only alphabets.";
+                header("Location: " . BASE_URL . "/profile/edit");
+                exit;
+            }
+
             $role = $_SESSION['role'];
 
             // ==========================
@@ -98,7 +109,8 @@ class ProfileController extends Controller
                     'position' => $_POST['position'] ?? '',
                     'subject_expert' => $_POST['subject_expert'] ?? '',
                     'bmi_index' => $bmiIndex,
-                    'waist_size' => $_POST['waist_size'] ?? ''
+                    'waist_size' => $_POST['waist_size'] ?? '',
+                    'employee_code' => $_POST['employee_code'] ?? ''
                 ];
             }
             // ==========================

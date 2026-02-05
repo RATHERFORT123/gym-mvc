@@ -200,22 +200,23 @@ body{
 <?php if (isset($_SESSION['role'])): ?>
 
 <?php if ($_SESSION['role'] === 'admin'): ?>
-<li class="nav-item dropdown me-2">
-    <a class="nav-link position-relative" data-bs-toggle="dropdown">
-        <i class="fas fa-bell"></i>
-        <span id="notificationBadge" class="badge bg-danger badge-notification d-none">0</span>
-    </a>
-    <div class="dropdown-menu dropdown-menu-end notification-dropdown">
-        <h6 class="dropdown-header">Notifications</h6>
-        <div id="notificationItems" class="text-center text-muted py-3">No new notifications</div>
-        <div class="dropdown-divider"></div>
-        <a class="dropdown-item text-center small text-primary" href="<?= BASE_URL ?>/admin/payments">View All Payments</a>
-    </div>
-</li>
+    
+    <li class="nav-item">
+        <a class="nav-link" href="<?= BASE_URL ?>/admin/dashboard">Dashboard</a>
+    </li>
 
-<li class="nav-item">
-    <a class="nav-link" href="<?= BASE_URL ?>/admin/dashboard">Dashboard</a>
-</li>
+    <li class="nav-item dropdown me-2">
+        <a class="nav-link position-relative" data-bs-toggle="dropdown">
+            <i class="fas fa-bell"></i>
+            <span id="notificationBadge" class="badge bg-danger badge-notification d-none">0</span>
+        </a>
+        <div class="dropdown-menu dropdown-menu-end notification-dropdown">
+            <h6 class="dropdown-header">Notifications</h6>
+            <div id="notificationItems" class="text-center text-muted py-3">No new notifications</div>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item text-center small text-primary" href="<?= BASE_URL ?>/admin/payments">View All Payments</a>
+        </div>
+    </li>
 
 <?php else: ?>
 
@@ -275,3 +276,69 @@ const nav=document.getElementById('mainNavbar');
 nav.classList.toggle('scrolled',window.scrollY>30);
 });
 </script>
+
+<?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const badge = document.getElementById('notificationBadge');
+    const itemsContainer = document.getElementById('notificationItems');
+    const bellLink = badge.parentElement;
+    const baseUrl = '<?= BASE_URL ?>';
+
+    function fetchNotifications() {
+        fetch(`${baseUrl}/admin/getNotifications`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Update badge
+                    if (data.count > 0) {
+                        badge.textContent = data.count;
+                        badge.classList.remove('d-none');
+                    } else {
+                        badge.classList.add('d-none');
+                    }
+
+                    // Update items
+                    if (data.notifications && data.notifications.length > 0) {
+                        let html = '';
+                        data.notifications.forEach(n => {
+                            const amount = parseFloat(n.amount).toFixed(2);
+                            const message = `₹${amount} paid by ${n.user_name} for ${n.plan_name || 'Plan'}`;
+                            html += `
+                                <a href="${baseUrl}/admin/payments" class="notification-item">
+                                    <div class="text-dark">${message}</div>
+                                    <div class="small text-muted mt-1">${new Date(n.created_at).toLocaleString('en-IN', {dateStyle: 'short', timeStyle: 'short'})}</div>
+                                </a>
+                            `;
+                        });
+                        itemsContainer.innerHTML = html;
+                        itemsContainer.classList.remove('text-center', 'text-muted', 'py-3');
+                    } else {
+                        itemsContainer.innerHTML = 'No new notifications';
+                        itemsContainer.classList.add('text-center', 'text-muted', 'py-3');
+                    }
+                }
+            })
+            .catch(err => console.error('Error fetching notifications:', err));
+    }
+
+    // Mark as read when clicking the bell
+    bellLink.addEventListener('click', function() {
+        if (!badge.classList.contains('d-none')) {
+            fetch(`${baseUrl}/admin/markNotificationsRead`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        badge.classList.add('d-none');
+                        badge.textContent = '0';
+                    }
+                });
+        }
+    });
+
+    // Initial fetch and poll every 30 seconds
+    fetchNotifications();
+    setInterval(fetchNotifications, 30000);
+});
+</script>
+<?php endif; ?>
