@@ -9,6 +9,13 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
+<!-- jQuery (required for Toastr) -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<!-- Toastr -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
 <style>
 :root{
     --bhagua:#FF9933;
@@ -269,11 +276,71 @@ body{
 
 <div style="margin-top:90px;"></div>
 
+<main class="flex-grow-1 container py-4">
+
 <script>
+/* Toastr Configuration */
+toastr.options = {
+    "closeButton": true,
+    "progressBar": true,
+    "positionClass": "toast-top-right",
+    "timeOut": "3000",
+    "extendedTimeOut": "1000",
+    "showEasing": "swing",
+    "hideEasing": "linear",
+    "showMethod": "fadeIn",
+    "hideMethod": "fadeOut"
+};
+
+<?php if (isset($_SESSION['flash_success'])): ?>
+    toastr.success("<?= $_SESSION['flash_success'] ?>", "Success");
+    <?php unset($_SESSION['flash_success']); ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['flash_error'])): ?>
+    toastr.error("<?= $_SESSION['flash_error'] ?>", "Error");
+    <?php unset($_SESSION['flash_error']); ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['flash_info'])): ?>
+    toastr.info("<?= $_SESSION['flash_info'] ?>", "Info");
+    <?php unset($_SESSION['flash_info']); ?>
+<?php endif; ?>
+
 /* Scroll Animation – UNCHANGED */
 window.addEventListener('scroll',()=>{
 const nav=document.getElementById('mainNavbar');
 nav.classList.toggle('scrolled',window.scrollY>30);
+});
+
+/* Mark Attendance Logic */
+document.getElementById('markAttendanceBtn')?.addEventListener('click', function () {
+    fetch('<?= BASE_URL ?>/attendance/mark', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            toastr.success('Attendance marked successfully!', 'Success');
+            document.getElementById('markAttendanceBtn').remove();
+        } else if (data.status === 'no_subscription') {
+            toastr.warning('You need an active subscription to mark attendance.', 'No Subscription');
+            setTimeout(() => {
+                window.location = '<?= BASE_URL ?>/payment/index';
+            }, 2000);
+        } else if (data.status === 'already_marked') {
+            toastr.info('Attendance already marked today.', 'Already Marked');
+        } else {
+            toastr.error('Unable to mark attendance.', 'Error');
+        }
+    })
+    .catch(err => {
+        console.error('Error marking attendance:', err);
+        toastr.error('An error occurred. Please try again.', 'Error');
+    });
 });
 </script>
 

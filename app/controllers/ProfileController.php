@@ -17,13 +17,15 @@ class ProfileController extends Controller
 
         if (!empty($profile['height_cm']) && !empty($profile['weight_kg'])) {
             $heightM = $profile['height_cm'] / 100;
-            $bmi = $profile['weight_kg'] / ($heightM * $heightM);
-            $bmi = number_format($bmi, 1);
+            if ($heightM > 0) {
+                $bmi = $profile['weight_kg'] / ($heightM * $heightM);
+                $bmi = number_format($bmi, 1);
 
-            if ($bmi < 18.5) $bmiCategory = 'Underweight';
-            elseif ($bmi < 24.9) $bmiCategory = 'Healthy Weight';
-            elseif ($bmi < 29.9) $bmiCategory = 'Overweight';
-            else $bmiCategory = 'Obese';
+                if ($bmi < 18.5) $bmiCategory = 'Underweight';
+                elseif ($bmi < 24.9) $bmiCategory = 'Healthy Weight';
+                elseif ($bmi < 29.9) $bmiCategory = 'Overweight';
+                else $bmiCategory = 'Obese';
+            }
         }
 
         // ==========================
@@ -90,8 +92,10 @@ class ProfileController extends Controller
 
                 if (!empty($height) && !empty($weight)) {
                     $heightM = $height / 100;
-                    $bmiIndex = $weight / ($heightM * $heightM);
-                    $bmiIndex = number_format($bmiIndex, 2);
+                    if ($heightM > 0) {
+                        $bmiIndex = $weight / ($heightM * $heightM);
+                        $bmiIndex = number_format($bmiIndex, 2);
+                    }
                 }
 
                 $data = [
@@ -124,8 +128,10 @@ class ProfileController extends Controller
 
                 if (!empty($height) && !empty($weight)) {
                     $heightM = $height / 100;
-                    $bmiIndex = $weight / ($heightM * $heightM);
-                    $bmiIndex = number_format($bmiIndex, 2);
+                    if ($heightM > 0) {
+                        $bmiIndex = $weight / ($heightM * $heightM);
+                        $bmiIndex = number_format($bmiIndex, 2);
+                    }
                 }
 
                 $data = [
@@ -154,6 +160,7 @@ class ProfileController extends Controller
                 $role
             );
 
+            $_SESSION['flash_success'] = "Profile updated successfully!";
             header("Location: " . BASE_URL . "/profile/index");
             exit;
         }

@@ -158,7 +158,6 @@ public function updateProfile($userId, $data, $role)
             $data['blood_group'] ?? null,
             $data['bmi_index'] ?? null,
             $data['waist_size'] ?? null,
-            $data['employee_code'] ?? null,
             $userId
         ];
     }
