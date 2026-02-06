@@ -234,6 +234,19 @@
         </div>
     </div>
 
+    <?php if (!empty($paymentDeclined)): ?>
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-danger mb-4" role="alert">
+            <h4 class="alert-heading"><i class="fas fa-exclamation-circle me-2"></i>Payment Declined</h4>
+            <p>Your recent payment transaction was declined by the administrator.</p>
+            <hr>
+            <p class="mb-0"><strong>Reason:</strong> <?= htmlspecialchars($declinedReason ?? 'Verification Failed') ?></p>
+            <div class="mt-3">
+                <a href="<?= BASE_URL ?>/payment/index" class="btn btn-danger btn-sm">Try Again / View Plans</a>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
     <div class="swiper hero-swiper">
         <div class="swiper-wrapper">
             <?php if (!empty($activeEvents)): ?>

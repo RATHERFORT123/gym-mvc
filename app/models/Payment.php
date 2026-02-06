@@ -159,7 +159,7 @@ class Payment extends Model
                 pm.name AS plan_name,
                 pm.plan_key,
                 p.status AS payment_status,
-                p.status -- Including this for backward compat if view uses ['status']
+                p.status
             FROM user_subscriptions us
             JOIN plans_master pm ON pm.id = us.plan_id
             JOIN payments p ON p.id = us.payment_id
@@ -187,11 +187,18 @@ class Payment extends Model
      * @param int $id
      * @param string $utr
      * @param string $payerUpi
+     * @param string|null $status
      */
-    public function updatePaymentDetails($id, $utr, $payerUpi)
+    public function updatePaymentDetails($id, $utr, $payerUpi, $status = null)
     {
-        $sql = "UPDATE payments SET utr_number = ?, payer_upi = ? WHERE id = ?";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$utr, $payerUpi, $id]);
+        if ($status) {
+            $sql = "UPDATE payments SET utr_number = ?, payer_upi = ?, status = ? WHERE id = ?";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([$utr, $payerUpi, $status, $id]);
+        } else {
+            $sql = "UPDATE payments SET utr_number = ?, payer_upi = ? WHERE id = ?";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([$utr, $payerUpi, $id]);
+        }
     }
 }

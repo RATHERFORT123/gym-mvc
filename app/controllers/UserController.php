@@ -30,11 +30,25 @@ class UserController extends Controller
         $eventModel = $this->model('Event');
         $activeEvents = $eventModel->getActive();
 
+        // Fetch latest payment status for declined notification
+        $paymentModel = $this->model('Payment');
+        $lastPayment = $paymentModel->getLatestPayment($_SESSION['user_id']);
+        
+        $paymentDeclined = false;
+        $declinedReason = '';
+        
+        if ($lastPayment && $lastPayment['status'] === 'rejected') {
+            $paymentDeclined = true;
+            $declinedReason = $lastPayment['declined_reason'];
+        }
+
         $this->view('user/dashboard', [
             'showProfileAlert' => $showProfileAlert,
             'currentPlan' => $currentPlan,
             'daysLeft' => $daysLeft,
-            'activeEvents' => $activeEvents
+            'activeEvents' => $activeEvents,
+            'paymentDeclined' => $paymentDeclined,
+            'declinedReason' => $declinedReason
         ]);
     }
 

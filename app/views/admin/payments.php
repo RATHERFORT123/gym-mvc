@@ -18,6 +18,7 @@
                             <th>Amount</th>
                             <th>Payer UPI (Manual Feed)</th>
                             <th>Transaction ID (UTR)</th>
+                            <th>Rejected Reason</th>
                             <th>Status</th>
                             <th>Action</th>
                         </tr>
@@ -38,12 +39,24 @@
                                     <td>
                                         <span class="text-info"><?= htmlspecialchars($p['payer_upi'] ?: '-') ?></span>
                                     </td>
-                                    <td><code><?= htmlspecialchars($p['utr_number'] ?: '-') ?></code></td>
+                                    <td><code><?= htmlspecialchars($p['utr_number'] ?: '---') ?></code></td>
+                                    <td>
+                                        <span class="<?= ($p['status'] === 'rejected' && !empty($p['declined_reason']))
+                                            ? 'text-danger'
+                                            : 'text-white text-center d-block' ?>">
+                                            
+                                            <?= ($p['status'] === 'rejected' && !empty($p['declined_reason']))
+                                                ? htmlspecialchars($p['declined_reason'])
+                                                : '----' ?>
+                                        </span>
+                                    </td>
                                     <td>
                                         <?php if ($p['status'] === 'verified'): ?>
                                             <span class="badge bg-success">Verified</span>
                                         <?php elseif ($p['status'] === 'failed'): ?>
                                             <span class="badge bg-danger">Failed</span>
+                                        <?php elseif ($p['status'] === 'rejected'): ?>
+                                            <span class="badge bg-danger">Rejected</span>
                                         <?php else: ?>
                                             <span class="badge bg-warning text-dark">Pending</span>
                                         <?php endif; ?>
@@ -51,6 +64,13 @@
                                     <td>
                                         <?php if ($p['status'] === 'pending'): ?>
                                             <a href="<?= BASE_URL ?>/admin/verifyPayment/<?= $p['id'] ?>" class="btn btn-sm btn-success">Verify</a>
+                                            <button type="button" 
+                                                class="btn btn-sm btn-danger reject-payment-btn"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#rejectPaymentModal"
+                                                data-id="<?= $p['id'] ?>">
+                                                Reject
+                                            </button>
                                         <?php endif; ?>
                                         <button type="button" 
                                             class="btn btn-sm btn-primary edit-payment-btn btn-mini"
@@ -58,7 +78,8 @@
                                             data-bs-target="#editPaymentModal"
                                             data-id="<?= $p['id'] ?>"
                                             data-utr="<?= htmlspecialchars($p['utr_number'] ?? '') ?>"
-                                            data-upi="<?= htmlspecialchars($p['payer_upi'] ?? '') ?>">
+                                            data-upi="<?= htmlspecialchars($p['payer_upi'] ?? '') ?>"
+                                            data-status="<?= $p['status'] ?>">
                                             Edit
                                         </button>
                                     </td>
@@ -91,10 +112,44 @@
           <label class="text-black">Payer UPI ID</label>
           <input type="text" name="payer_upi" id="edit_payer_upi" class="form-control">
         </div>
+
+        <div class="mb-3">
+          <label class="text-black">Status</label>
+          <select name="status" id="edit_status" class="form-select">
+              <option value="pending">Pending</option>
+              <option value="rejected">Rejected</option>
+              <option value="verified">Verified</option>
+          </select>
+          <small class="text-muted">Set to <strong>Pending</strong> to allow verification again.</small>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Reject Payment Modal -->
+<div class="modal fade" id="rejectPaymentModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" method="POST" action="<?= BASE_URL ?>/admin/rejectPayment">
+      <div class="modal-header">
+        <h5 class="modal-title text-black">Reject Payment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="payment_id" id="reject_payment_id">
+        <p class="text-black">Are you sure you want to reject this payment?</p>
+        <div class="mb-3">
+            <label class="text-black fw-bold">Reason for Rejection</label>
+            <textarea name="declined_reason" class="form-control" rows="3" required placeholder="e.g. Invalid Transaction ID or Amount mismatch"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-danger">Confirm Reject</button>
       </div>
     </form>
   </div>
@@ -108,6 +163,14 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit_payment_id').value = this.dataset.id;
             document.getElementById('edit_utr_number').value = this.dataset.utr;
             document.getElementById('edit_payer_upi').value = this.dataset.upi;
+            document.getElementById('edit_status').value = this.dataset.status;
+        });
+    });
+
+    const rejectBtns = document.querySelectorAll('.reject-payment-btn');
+    rejectBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('reject_payment_id').value = this.dataset.id;
         });
     });
 });

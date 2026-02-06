@@ -4,7 +4,7 @@
     <div class="col-12 px-4">
         <div class="text-center mb-4">
             <h2 class="text-warning">Choose a Plan</h2>
-            <p class="text-white">Select one of our plans and scan the UPI QR to pay. After payment, submit the transaction id.</p>
+            <p class="text-muted">Select one of our plans and scan the UPI QR to pay. After payment, submit the transaction id.</p>
         </div>
 
         <?php if (!empty($_SESSION['error'])): ?>
@@ -47,7 +47,7 @@
                                 <?php endif; ?>
                             </div>
 
-                            <div class="card-back card-body p-3 text-center">
+                            <div class="card-back card-body p-3 text-center" style="display: none;">
                                 <div class="qr-container mb-4" style="display:none;">
                                     <a href="#" class="open-upi-link d-block mb-2"><img src="" alt="QR" class="qr-img mb-3 img-fluid" style="max-width:180px;"></a>
                                     <div class="mt-2">
@@ -78,7 +78,13 @@
                                         <input type="hidden" name="plan_id" value="">
                                         <input type="hidden" name="plan_key" value="">
                                         <div class="mb-2">
-                                            <input class="form-control form-control-sm" name="payer_upi" placeholder="Your UPI ID (Optional)">
+                                            <input class="form-control form-control-sm" name="payer_upi" placeholder="UPI ID used for payment">
+                                        </div>
+                                        <div class="mb-2">
+                                            <input class="form-control form-control-sm" name="account_holder_name" placeholder="Account Holder Name">
+                                        </div>
+                                        <div class="mb-2">
+                                            <input type="date" class="form-control form-control-sm" name="transaction_date" required value="<?= date('Y-m-d') ?>" max="<?= date('Y-m-d') ?>">
                                         </div>
                                         <div class="mb-2">
                                             <input class="form-control form-control-sm" name="utr" placeholder="Enter UTR" required>
@@ -122,6 +128,7 @@
                 const openBtn = c.querySelector('.open-upi'); if(openBtn) { openBtn.href='#'; openBtn.style.display='none'; }
                 const phonepeBtn = c.querySelector('.open-phonepe'); if(phonepeBtn) { phonepeBtn.href='#'; phonepeBtn.style.display='none'; }
                 const gpayBtn = c.querySelector('.open-gpay'); if(gpayBtn) { gpayBtn.href='#'; gpayBtn.style.display='none'; }
+                const subBtn = c.querySelector('.subscribe-btn'); if(subBtn) subBtn.style.display='';
                 const toggleQrBtn = c.querySelector('.toggle-qr'); 
                 if(toggleQrBtn) {
                     toggleQrBtn.style.display='none';
@@ -149,6 +156,9 @@
                 e.preventDefault();
                 e.stopPropagation();
                 
+                // Hide subscribe button
+                btn.style.display = 'none';
+
                 const card = e.target.closest('.plan-card');
                 const planKey = e.target.dataset.plan;
 
@@ -383,6 +393,10 @@
 
             const runValidationAndSubmit = async function() {
                 const utrInput = form.querySelector('input[name=utr]');
+                const payerUpiInput = form.querySelector('input[name=payer_upi]');
+                const payerUpi = (payerUpiInput && payerUpiInput.value || '').trim();
+                const accountHolderInput = form.querySelector('input[name=account_holder_name]');
+                const accountHolder = (accountHolderInput && accountHolderInput.value || '').trim();
                 const paymentId = form.querySelector('input[name=payment_id]').value;
                 const planKey = form.querySelector('input[name=plan_key]').value;
                 const utr = (utrInput && utrInput.value || '').trim();
@@ -400,6 +414,26 @@
                     }
                 }
 
+                if (!payerUpi) {
+                    setUtrError('Please enter your UPI ID.');
+                    return;
+                }
+
+                if (!/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/.test(payerUpi)) {
+                    setUtrError('Invalid UPI ID format (e.g. user@bank).');
+                    return;
+                }
+
+                if (!accountHolder) {
+                    setUtrError('Please enter Account Holder Name.');
+                    return;
+                }
+
+                if (!/^[a-zA-Z\s]+$/.test(accountHolder)) {
+                    setUtrError('Account Holder Name must contain only alphabets.');
+                    return;
+                }
+
                 if (!utr) {
                     setUtrError('Please enter UTR.');
                     return;
@@ -408,6 +442,21 @@
                 if (!/^\d+$/.test(utr)) {
                     setUtrError('UTR must contain only numbers.');
                     return;
+                }
+
+                // Validate Date (Client-side)
+                const dateInput = form.querySelector('input[name=transaction_date]');
+                if (dateInput && dateInput.value) {
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                    const day = String(today.getDate()).padStart(2, '0');
+                    const todayStr = `${year}-${month}-${day}`;
+
+                    if (dateInput.value > todayStr) {
+                        setUtrError('Transaction date cannot be in the future.');
+                        return;
+                    }
                 }
 
                 // clear previous error while checking
@@ -463,6 +512,9 @@
                 showAll();
             }
         });
+
+        // Initialize state to ensure back of cards are hidden
+        showAll();
     })();
 </script>
 

@@ -233,6 +233,38 @@ public function dashboard()
         exit;
     }
 
+    public function rejectPayment()
+    {
+        Auth::role(['admin']);
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = $_POST['payment_id'] ?? null;
+            $reason = trim($_POST['declined_reason'] ?? '');
+
+            if ($id) {
+                $pdo = Database::getInstance();
+                
+                // Update status to rejected and save reason
+                $stmt = $pdo->prepare("UPDATE payments SET status = 'rejected', declined_reason = ? WHERE id = ?");
+                $stmt->execute([$reason, $id]);
+
+                // Notify User
+                $stmt = $pdo->prepare("SELECT p.*, u.name, u.email, pm.name as plan_name FROM payments p JOIN users u ON u.id = p.user_id LEFT JOIN plans_master pm ON pm.id = p.plan_id WHERE p.id = ?");
+                $stmt->execute([$id]);
+                $payment = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($payment) {
+                    $subject = "Payment Rejected - SGSIT Gym";
+                    $message = "Hello " . htmlspecialchars($payment['name']) . ",<br><br>Your payment for <strong>" . htmlspecialchars($payment['plan_name']) . "</strong> has been rejected.<br><br><strong>Reason:</strong> " . nl2br(htmlspecialchars($reason)) . "<br><br>Please check your transaction details and try again.";
+                    Mailer::send($payment['email'], $subject, $message);
+                }
+            }
+        }
+        
+        header("Location: " . BASE_URL . "/admin/payments");
+        exit;
+    }
+
     public function editPayment()
     {
         Auth::role(['admin']);
@@ -240,9 +272,10 @@ public function dashboard()
             $id = $_POST['payment_id'] ?? null;
             $utr = trim($_POST['utr_number'] ?? '');
             $payer_upi = trim($_POST['payer_upi'] ?? '');
+            $status = $_POST['status'] ?? null;
 
             if ($id) {
-                $this->model('Payment')->updatePaymentDetails($id, $utr, $payer_upi);
+                $this->model('Payment')->updatePaymentDetails($id, $utr, $payer_upi, $status);
             }
         }
         header("Location: " . BASE_URL . "/admin/payments");

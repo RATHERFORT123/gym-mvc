@@ -5,6 +5,9 @@ class PaymentController extends Controller
 
     public function index()
     {
+        // Set timezone to India to ensure 'today' is calculated correctly for the view
+        date_default_timezone_set('Asia/Kolkata');
+
         // Only allow logged-in users and faculty to view the plans page
         Auth::role(['user', 'faculty']);
 
@@ -222,11 +225,36 @@ class PaymentController extends Controller
         $payment_id = $_POST['payment_id'] ?? '';
         $utr = trim($_POST['utr'] ?? '');
         $payer_upi = trim($_POST['payer_upi'] ?? '');
+        $account_holder = trim($_POST['account_holder_name'] ?? '');
+        $txn_date = $_POST['transaction_date'] ?? '';
         $plan_key = $_POST['plan_key'] ?? '';
         $plan_id = $_POST['plan_id'] ?? '';
 
-        if (!$utr) {
-            $_SESSION['error'] = 'Please provide transaction id.';
+        if (empty($utr) || empty($payer_upi) || empty($account_holder) || empty($txn_date)) {
+            $_SESSION['error'] = 'Please fill in all required fields: UTR, UPI ID, Account Holder Name, and Transaction Date.';
+            header('Location: ' . BASE_URL . '/payment/index');
+            exit;
+        }
+
+        // Validate UPI ID format
+        if (!preg_match('/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/', $payer_upi)) {
+            $_SESSION['error'] = 'Invalid UPI ID format. Example: name@bank';
+            header('Location: ' . BASE_URL . '/payment/index');
+            exit;
+        }
+
+        // Validate Account Holder Name (Alphabets only)
+        if (!preg_match("/^[a-zA-Z\s]+$/", $account_holder)) {
+            $_SESSION['error'] = 'Account Holder Name must contain only alphabets.';
+            header('Location: ' . BASE_URL . '/payment/index');
+            exit;
+        }
+
+        // Set timezone to India to ensure validation respects local 'today'
+        date_default_timezone_set('Asia/Kolkata');
+
+        if (strtotime($txn_date) > strtotime(date('Y-m-d'))) {
+            $_SESSION['error'] = 'Transaction date cannot be in the future.';
             header('Location: ' . BASE_URL . '/payment/index');
             exit;
         }
@@ -263,8 +291,8 @@ class PaymentController extends Controller
             // Update existing payment with UTR
             $now = date('Y-m-d H:i:s');
             try {
-                $stmt = $pdo->prepare("UPDATE payments SET utr_number = ?, payer_upi = ?, status = 'pending', paid_at = ?, is_read = 0 WHERE id = ?");
-                $stmt->execute([$utr, $payer_upi, $now, $payment_id]);
+                $stmt = $pdo->prepare("UPDATE payments SET utr_number = ?, payer_upi = ?, account_holder_name = ?, transaction_date = ?, status = 'pending', paid_at = ?, is_read = 0 WHERE id = ?");
+                $stmt->execute([$utr, $payer_upi, $account_holder, $txn_date, $now, $payment_id]);
             } catch (PDOException $e) {
                 // Handle duplicate key / constraint violation gracefully
                 if ($e->getCode() === '23000') {
@@ -329,7 +357,7 @@ class PaymentController extends Controller
             // Create payment record WITH UTR and payer_upi in one INSERT
             $now = date('Y-m-d H:i:s');
             try {
-                $stmt = $pdo->prepare("INSERT INTO payments (user_id, plan_id, amount, payment_method, upi_id, utr_number, payer_upi, status, paid_at, is_read) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, 0)");
+                $stmt = $pdo->prepare("INSERT INTO payments (user_id, plan_id, amount, payment_method, upi_id, utr_number, payer_upi, account_holder_name, transaction_date, status, paid_at, is_read) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, 0)");
                 $stmt->execute([
                     $_SESSION['user_id'],
                     $planRow['id'],
@@ -338,6 +366,8 @@ class PaymentController extends Controller
                     $global_upi,
                     $utr,
                     $payer_upi,
+                    $account_holder,
+                    $txn_date,
                     $now
                 ]);
                 $payment_id = $pdo->lastInsertId();

@@ -122,9 +122,12 @@ class Database
             upi_id VARCHAR(100) NOT NULL,
 
             payer_upi VARCHAR(100) DEFAULT NULL,
+            account_holder_name VARCHAR(100) DEFAULT NULL,
             utr_number VARCHAR(50) DEFAULT NULL,
+            transaction_date DATE DEFAULT NULL,
 
             status ENUM('pending','verified','rejected') DEFAULT 'pending',
+            declined_reason TEXT DEFAULT NULL,
             is_read TINYINT(1) DEFAULT 0,
             paid_at DATETIME DEFAULT NULL,
             verified_at DATETIME DEFAULT NULL,
@@ -238,6 +241,21 @@ class Database
             // Add is_read to payments
             try {
                 self::$pdo->exec("ALTER TABLE payments ADD COLUMN is_read TINYINT(1) DEFAULT 0 AFTER status");
+            } catch (Exception $e) { /* Column might already exist */ }
+
+            // Add declined_reason to payments
+            try {
+                self::$pdo->exec("ALTER TABLE payments ADD COLUMN declined_reason TEXT DEFAULT NULL AFTER status");
+            } catch (Exception $e) { /* Column might already exist */ }
+
+            // Add account_holder_name to payments
+            try {
+                self::$pdo->exec("ALTER TABLE payments ADD COLUMN account_holder_name VARCHAR(100) DEFAULT NULL AFTER payer_upi");
+            } catch (Exception $e) { /* Column might already exist */ }
+
+            // Add transaction_date to payments
+            try {
+                self::$pdo->exec("ALTER TABLE payments ADD COLUMN transaction_date DATE DEFAULT NULL AFTER utr_number");
             } catch (Exception $e) { /* Column might already exist */ }
 
         } catch (Exception $e) {}

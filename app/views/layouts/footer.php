@@ -11,7 +11,7 @@
         backdrop-filter: blur(15px);
         -webkit-backdrop-filter: blur(15px);
         border-top: 3px solid var(--bhagua);
-        padding: 60px 0 30px 0;
+        padding: 20px 0;
         color: #2d3436;
         position: relative;
         overflow: hidden;
@@ -36,7 +36,7 @@
         font-weight: 800;
         letter-spacing: 1px;
         color: #1e272e;
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.5rem;
     }
 
     .footer-brand span {
@@ -47,7 +47,7 @@
         color: var(--text-muted);
         font-size: 0.95rem;
         max-width: 400px;
-        margin: 0 auto 2rem auto;
+        margin: 0 auto 1rem auto;
         line-height: 1.6;
     }
 
@@ -56,7 +56,7 @@
         display: flex;
         justify-content: center;
         gap: 20px;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
     }
 
     .social-link {
@@ -83,8 +83,8 @@
 
     .footer-bottom {
         border-top: 1px solid rgba(0,0,0,0.05);
-        padding-top: 25px;
-        margin-top: 20px;
+        padding-top: 10px;
+        margin-top: 10px;
     }
 
     .copyright-text {
@@ -93,8 +93,9 @@
     }
 </style>
 
-<footer class="custom-footer mt-auto">
-    <div class="container text-center position-relative" style="z-index: 1;">
+<footer class="custom-footer" style="margin-top: 200px; height: 230px; font-size: 12px; line-height: 1.3;">
+
+    <div class="container-fluid text-center position-relative px-4" style="z-index: 1;">
         
         <!-- <h4 class="">SGSIT <span>GYM</span></h4> -->
          <h4><span class="brand-main footer-brand">GYMNASIUM <span style="color:var(--brand-red)">LEGEND</span></span>
