@@ -148,33 +148,368 @@ public function dashboard()
         ]);
     }
 
-    public function payments()
-    {
-        Auth::role(['admin']);
-        $pdo = Database::getInstance();
-        $stmt = $pdo->prepare("
-            SELECT p.*, u.name as user_name, u.email as user_email, pm.name as plan_name 
-            FROM payments p 
-            JOIN users u ON u.id = p.user_id 
-            LEFT JOIN plans_master pm ON pm.id = p.plan_id 
-            ORDER BY p.created_at DESC
-        ");
-        $stmt->execute();
-        $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        $this->view('admin/payments', ['payments' => $payments]);
+    // public function payments()
+    // {
+    //     Auth::role(['admin']);
+    //     $pdo = Database::getInstance();
+    //     $stmt = $pdo->prepare("
+    //         SELECT p.*, u.name as user_name, u.email as user_email, pm.name as plan_name 
+    //         FROM payments p 
+    //         JOIN users u ON u.id = p.user_id 
+    //         LEFT JOIN plans_master pm ON pm.id = p.plan_id 
+    //         ORDER BY p.created_at DESC
+    //     ");
+    //     $stmt->execute();
+    //     $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    //     $this->view('admin/payments', ['payments' => $payments]);
+    // }
+
+
+public function payments()
+{
+    Auth::role(['admin']);
+    $pdo = Database::getInstance();
+
+    // Filters
+    $startDate      = $_GET['start_date'] ?? null;
+    $endDate        = $_GET['end_date'] ?? null;
+    $status         = $_GET['status'] ?? null;
+    $expiryFilter   = $_GET['expiry_filter'] ?? null;
+    $utr            = $_GET['utr'] ?? null;
+    $payerUpi       = $_GET['payer_upi'] ?? null;
+    $accountHolder  = $_GET['account_holder'] ?? null;
+
+    // Pagination
+    $page  = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+    $limit = 10; // records per page
+    $offset = ($page - 1) * $limit;
+
+    /* ================= COUNT QUERY ================= */
+    $countSql = "
+        SELECT COUNT(*)
+        FROM payments p
+        JOIN users u ON u.id = p.user_id
+        LEFT JOIN user_subscriptions us ON us.payment_id = p.id
+        WHERE 1=1
+    ";
+
+    $countParams = [];
+
+    if ($startDate && $endDate) {
+        $countSql .= " AND DATE(p.transaction_date) BETWEEN :sd AND :ed";
+        $countParams[':sd'] = $startDate;
+        $countParams[':ed'] = $endDate;
     }
 
-    public function verifyPayment($id)
-    {
-        Auth::role(['admin']);
-        $pdo = Database::getInstance();
-        $now = date('Y-m-d H:i:s');
-        
-        // 1. Get payment, plan and USER details
+    if ($status) {
+        $countSql .= " AND p.status = :status";
+        $countParams[':status'] = $status;
+    }
+
+    if ($utr) {
+        $countSql .= " AND p.utr_number LIKE :utr";
+        $countParams[':utr'] = "%$utr%";
+    }
+
+    if ($payerUpi) {
+        $countSql .= " AND p.payer_upi LIKE :payer_upi";
+        $countParams[':payer_upi'] = "%$payerUpi%";
+    }
+
+    if ($accountHolder) {
+        $countSql .= " AND p.account_holder_name LIKE :account_holder";
+        $countParams[':account_holder'] = "%$accountHolder%";
+    }
+
+    if ($expiryFilter === 'expired') {
+        $countSql .= " AND us.end_date < CURRENT_DATE";
+    } elseif ($expiryFilter === 'active') {
+        $countSql .= " AND us.end_date >= CURRENT_DATE";
+    }
+
+    $stmt = $pdo->prepare($countSql);
+    $stmt->execute($countParams);
+    $totalRecords = (int)$stmt->fetchColumn();
+    $totalPages = max(1, ceil($totalRecords / $limit));
+
+    /* ================= MAIN DATA QUERY ================= */
+    $sql = "
+        SELECT 
+            p.*,
+            u.name AS user_name,
+            u.email AS user_email,
+            pm.name AS plan_name,
+            us.end_date AS expiry_date
+        FROM payments p
+        JOIN users u ON u.id = p.user_id
+        LEFT JOIN plans_master pm ON pm.id = p.plan_id
+        LEFT JOIN user_subscriptions us ON us.payment_id = p.id
+        WHERE 1=1
+    ";
+
+    $params = [];
+
+    if ($startDate && $endDate) {
+        $sql .= " AND DATE(p.transaction_date) BETWEEN :sd AND :ed";
+        $params[':sd'] = $startDate;
+        $params[':ed'] = $endDate;
+    }
+
+    if ($status) {
+        $sql .= " AND p.status = :status";
+        $params[':status'] = $status;
+    }
+
+    if ($utr) {
+        $sql .= " AND p.utr_number LIKE :utr";
+        $params[':utr'] = "%$utr%";
+    }
+
+    if ($payerUpi) {
+        $sql .= " AND p.payer_upi LIKE :payer_upi";
+        $params[':payer_upi'] = "%$payerUpi%";
+    }
+
+    if ($accountHolder) {
+        $sql .= " AND p.account_holder_name LIKE :account_holder";
+        $params[':account_holder'] = "%$accountHolder%";
+    }
+
+    if ($expiryFilter === 'expired') {
+        $sql .= " AND us.end_date < CURRENT_DATE";
+    } elseif ($expiryFilter === 'active') {
+        $sql .= " AND us.end_date >= CURRENT_DATE";
+    }
+
+    $sql .= " ORDER BY p.transaction_date DESC LIMIT :limit OFFSET :offset";
+
+    $stmt = $pdo->prepare($sql);
+
+    // Bind normal params
+    foreach ($params as $k => $v) {
+        $stmt->bindValue($k, $v);
+    }
+
+    // Bind pagination params
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+
+    $stmt->execute();
+    $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $this->view('admin/payments', [
+        'payments'    => $payments,
+        'page'        => $page,
+        'totalPages'  => $totalPages
+    ]);
+}
+
+
+
+// public function payments()
+// {
+//     Auth::role(['admin']);
+//     $pdo = Database::getInstance();
+// $accountHolder = $_GET['account_holder'] ?? null;
+
+
+
+//     $startDate    = $_GET['start_date'] ?? null;
+//     $endDate      = $_GET['end_date'] ?? null;
+//     $status       = $_GET['status'] ?? null;
+//     $expiryFilter = $_GET['expiry_filter'] ?? null;
+//     $utr          = $_GET['utr'] ?? null;
+//     $payerUpi     = $_GET['payer_upi'] ?? null;
+
+//     $sql = "
+//         SELECT 
+//             p.*,
+//             u.name AS user_name,
+//             u.email AS user_email,
+//             pm.name AS plan_name,
+//             us.end_date AS expiry_date
+//         FROM payments p
+//         JOIN users u ON u.id = p.user_id
+//         LEFT JOIN plans_master pm ON pm.id = p.plan_id
+//         LEFT JOIN user_subscriptions us ON us.payment_id = p.id
+//         WHERE 1=1
+//     ";
+
+//     $params = [];
+
+//     if ($startDate && $endDate) {
+//         $sql .= " AND DATE(p.transaction_date) BETWEEN :sd AND :ed";
+//         $params[':sd'] = $startDate;
+//         $params[':ed'] = $endDate;
+//     }
+
+//     if ($status) {
+//         $sql .= " AND p.status = :status";
+//         $params[':status'] = $status;
+//     }
+
+//     if ($utr) {
+//         $sql .= " AND p.utr_number LIKE :utr";
+//         $params[':utr'] = "%$utr%";
+//     }
+
+//     if ($payerUpi) {
+//         $sql .= " AND p.payer_upi LIKE :payer_upi";
+//         $params[':payer_upi'] = "%$payerUpi%";
+//     }   
+// if ($accountHolder) {
+//     $sql .= " AND p.account_holder_name LIKE :account_holder";
+//     $params[':account_holder'] = "%$accountHolder%";
+// }
+//     if ($expiryFilter === 'expired') {
+//         $sql .= " AND us.end_date < CURRENT_DATE";
+//     } elseif ($expiryFilter === 'active') {
+//         $sql .= " AND us.end_date >= CURRENT_DATE";
+//     }
+
+//     $sql .= " ORDER BY p.transaction_date DESC";
+
+//     $stmt = $pdo->prepare($sql);
+//     $stmt->execute($params);
+
+//     $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+//     $this->view('admin/payments', compact('payments'));
+// }
+public function exportPayments()
+{
+    Auth::role(['admin']);
+
+    $pdo = Database::getInstance();
+
+    // Filters
+    $startDate     = $_GET['start_date'] ?? null;
+    $endDate       = $_GET['end_date'] ?? null;
+    $status        = $_GET['status'] ?? null;
+    $expiryFilter  = $_GET['expiry_filter'] ?? null;
+    $utr           = $_GET['utr'] ?? null;
+    $payerUpi      = $_GET['payer_upi'] ?? null;
+    $accountHolder = $_GET['account_holder'] ?? null;
+
+    $sql = "
+        SELECT 
+            u.name AS member_name,
+            p.amount,
+            p.transaction_date,
+            p.status,
+            p.utr_number,
+            p.payer_upi,
+            p.account_holder_name,
+            us.end_date AS expiry_date
+        FROM payments p
+        JOIN users u ON u.id = p.user_id
+        LEFT JOIN user_subscriptions us ON us.payment_id = p.id
+        WHERE 1=1
+    ";
+
+    $params = [];
+
+    if ($startDate && $endDate) {
+        $sql .= " AND DATE(p.transaction_date) BETWEEN :sd AND :ed";
+        $params[':sd'] = $startDate;
+        $params[':ed'] = $endDate;
+    }
+
+    if ($status) {
+        $sql .= " AND p.status = :status";
+        $params[':status'] = $status;
+    }
+
+    if ($utr) {
+        $sql .= " AND p.utr_number LIKE :utr";
+        $params[':utr'] = "%$utr%";
+    }
+
+    if ($payerUpi) {
+        $sql .= " AND p.payer_upi LIKE :payer_upi";
+        $params[':payer_upi'] = "%$payerUpi%";
+    }
+
+    if ($accountHolder) {
+        $sql .= " AND p.account_holder_name LIKE :account_holder";
+        $params[':account_holder'] = "%$accountHolder%";
+    }
+
+    if ($expiryFilter === 'expired') {
+        $sql .= " AND us.end_date < CURRENT_DATE";
+    } elseif ($expiryFilter === 'active') {
+        $sql .= " AND us.end_date >= CURRENT_DATE";
+    }
+
+    $sql .= " ORDER BY p.transaction_date DESC";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Clear output buffer (important)
+    if (ob_get_length()) {
+        ob_end_clean();
+    }
+
+    // Create Excel (SAME STYLE AS exportAttendance)
+    $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+
+    // Header row
+    $sheet->setCellValue('A1', 'Member Name');
+    $sheet->setCellValue('B1', 'Amount');
+    $sheet->setCellValue('C1', 'Payment Date');
+    $sheet->setCellValue('D1', 'Expiry Date');
+    $sheet->setCellValue('E1', 'Status');
+    $sheet->setCellValue('F1', 'UTR');
+    $sheet->setCellValue('G1', 'Payer UPI');
+    $sheet->setCellValue('H1', 'Account Holder');
+
+    // Data rows
+    $row = 2;
+    foreach ($rows as $r) {
+        $sheet->setCellValue('A' . $row, $r['member_name']);
+        $sheet->setCellValue('B' . $row, $r['amount']);
+        $sheet->setCellValue('C' . $row, $r['transaction_date']);
+        $sheet->setCellValue('D' . $row, $r['expiry_date']);
+        $sheet->setCellValue('E' . $row, ucfirst($r['status']));
+        $sheet->setCellValue('F' . $row, $r['utr_number']);
+        $sheet->setCellValue('G' . $row, $r['payer_upi']);
+        $sheet->setCellValue('H' . $row, $r['account_holder_name']);
+        $row++;
+    }
+
+    // Auto-size columns
+    foreach (range('A', 'H') as $col) {
+        $sheet->getColumnDimension($col)->setAutoSize(true);
+    }
+
+    // Download (EXACT SAME AS exportAttendance)
+    $filename = 'payments_' . date('Ymd_His') . '.xlsx';
+
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Cache-Control: max-age=0');
+
+    $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+    $writer->save('php://output');
+    exit;
+}
+public function verifyPayment($id)
+{
+    Auth::role(['admin']);
+    $pdo = Database::getInstance();
+    $now = date('Y-m-d H:i:s');
+
+    try {
+        $pdo->beginTransaction();
+
+        // Fetch payment
         $stmt = $pdo->prepare("
-            SELECT p.*, pm.plan_key, pm.duration_days, pm.name as plan_name, u.name as user_name, u.email as user_email
-            FROM payments p 
-            JOIN plans_master pm ON pm.id = p.plan_id 
+            SELECT p.*, pm.duration_days, pm.name AS plan_name,
+                   u.name AS user_name, u.email AS user_email
+            FROM payments p
+            JOIN plans_master pm ON pm.id = p.plan_id
             JOIN users u ON u.id = p.user_id
             WHERE p.id = ?
         ");
@@ -182,22 +517,43 @@ public function dashboard()
         $payment = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$payment) {
-            header("Location: " . BASE_URL . "/admin/payments");
+            $pdo->rollBack();
+            header("Location: " . BASE_URL . "/admin/payments?msg=not_found");
             exit;
         }
 
-        // 2. Mark payment as verified
-        $stmt = $pdo->prepare("UPDATE payments SET status = 'verified', verified_at = ? WHERE id = ?");
+        if ($payment['status'] === 'verified') {
+            $pdo->rollBack();
+            header("Location: " . BASE_URL . "/admin/payments?msg=already_verified");
+            exit;
+        }
+
+        // Prevent duplicate subscription
+        $stmt = $pdo->prepare("SELECT id FROM user_subscriptions WHERE payment_id = ?");
+        $stmt->execute([$id]);
+        if ($stmt->fetch()) {
+            $pdo->rollBack();
+            header("Location: " . BASE_URL . "/admin/payments?msg=sub_exists");
+            exit;
+        }
+
+        // Verify payment
+        $stmt = $pdo->prepare("
+            UPDATE payments SET status='verified', verified_at=? WHERE id=?
+        ");
         $stmt->execute([$now, $id]);
 
-        // 3. Calculate subscription duration
+        // Dates
         $startDate = date('Y-m-d');
-        $duration = $payment['duration_days'] ?? 30; // Use stored duration from database
+        $duration  = $payment['duration_days'] ?? 30;
+        $endDate   = date('Y-m-d', strtotime("+$duration days"));
 
-        $endDate = date('Y-m-d', strtotime("+$duration days"));
-
-        // 4. Create User Subscription
-        $stmt = $pdo->prepare("INSERT INTO user_subscriptions (user_id, plan_id, payment_id, start_date, end_date, status) VALUES (?, ?, ?, ?, ?, 'active')");
+        // Insert subscription
+        $stmt = $pdo->prepare("
+            INSERT INTO user_subscriptions
+            (user_id, plan_id, payment_id, start_date, end_date, status)
+            VALUES (?, ?, ?, ?, ?, 'active')
+        ");
         $stmt->execute([
             $payment['user_id'],
             $payment['plan_id'],
@@ -206,32 +562,150 @@ public function dashboard()
             $endDate
         ]);
 
-        // 5. Send Membership Activated Email
+        $pdo->commit();
+
+        // Email (FAIL-SAFE)
+        try {
+                // 7. Send email (only after success)
         $subject = "Membership Activated! Welcome to SGSIT Gym";
-        $message = "
-            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
-                <h2 style='color: #198754;'>Payment Verified!</h2>
-                <p>Hello " . htmlspecialchars($payment['user_name']) . ",</p>
-                <p>Great news! Your payment for the <strong>" . htmlspecialchars($payment['plan_name']) . "</strong> has been verified and your membership is now <strong>Active</strong>.</p>
-                <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;'>
-                    <p style='margin: 5px 0;'><strong>Plan:</strong> " . htmlspecialchars($payment['plan_name']) . "</p>
-                    <p style='margin: 5px 0;'><strong>Start Date:</strong> " . date('M d, Y', strtotime($startDate)) . "</p>
-                    <p style='margin: 5px 0;'><strong>End Date:</strong> " . date('M d, Y', strtotime($endDate)) . "</p>
-                    <p style='margin: 5px 0;'><strong>Status:</strong> Active</p>
-                </div>
-                <p>You now have full access to the gym facilities, personalized diet charts, and workout plans.</p>
-                <div style='text-align: center; margin: 30px 0;'>
-                    <a href='" . BASE_URL . "/user/dashboard' style='background-color: #198754; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;'>View My Dashboard</a>
-                </div>
-                <hr style='border: 0; border-top: 1px solid #eee; margin-top: 30px;'>
-                <p style='font-size: 0.8rem; color: #999; text-align: center;'>SGSIT Gym Management System</p>
-            </div>
-        ";
+
+$message = "
+<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+    <h2 style='color: #198754;'>Payment Verified!</h2>
+
+    <p>Hello " . htmlspecialchars($payment['user_name']) . ",</p>
+
+    <p>
+        Great news! Your payment for the 
+        <strong>" . htmlspecialchars($payment['plan_name']) . "</strong> 
+        has been verified and your membership is now 
+        <strong>Active</strong>.
+    </p>
+
+    <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+        <p style='margin: 5px 0;'>
+            <strong>Plan:</strong> " . htmlspecialchars($payment['plan_name']) . "
+        </p>
+        <p style='margin: 5px 0;'>
+            <strong>Start Date:</strong> " . date('M d, Y', strtotime($startDate)) . "
+        </p>
+        <p style='margin: 5px 0;'>
+            <strong>End Date:</strong> " . date('M d, Y', strtotime($endDate)) . "
+        </p>
+        <p style='margin: 5px 0;'>
+            <strong>Status:</strong> Active
+        </p>
+    </div>
+
+    <p>
+        You now have full access to the gym facilities, personalized diet charts, and workout plans.
+    </p>
+
+    <div style='text-align: center; margin: 30px 0;'>
+        <a href='" . BASE_URL . "/user/dashboard'
+           style='background-color: #198754; color: white; padding: 12px 25px;
+                  text-decoration: none; border-radius: 5px; font-weight: bold;'>
+           View My Dashboard
+        </a>
+    </div>
+
+    <hr style='border: 0; border-top: 1px solid #eee; margin-top: 30px;'>
+
+    <p style='font-size: 0.8rem; color: #999; text-align: center;'>
+        SGSIT Gym Management System
+    </p>
+</div>
+";
+
         Mailer::send($payment['user_email'], $subject, $message);
-        
-        header("Location: " . BASE_URL . "/admin/payments");
+
+        } catch (Throwable $e) {
+            error_log("Email failed: " . $e->getMessage());
+        }
+
+        header("Location: " . BASE_URL . "/admin/payments?msg=verified");
+        exit;
+
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        error_log($e->getMessage());
+        header("Location: " . BASE_URL . "/admin/payments?msg=error");
         exit;
     }
+}
+
+    
+
+ 
+
+    // public function verifyPayment($id)
+    // {
+    //     Auth::role(['admin']);
+    //     $pdo = Database::getInstance();
+    //     $now = date('Y-m-d H:i:s');
+        
+    //     // 1. Get payment, plan and USER details
+    //     $stmt = $pdo->prepare("
+    //         SELECT p.*, pm.plan_key, pm.duration_days, pm.name as plan_name, u.name as user_name, u.email as user_email
+    //         FROM payments p 
+    //         JOIN plans_master pm ON pm.id = p.plan_id 
+    //         JOIN users u ON u.id = p.user_id
+    //         WHERE p.id = ?
+    //     ");
+    //     $stmt->execute([$id]);
+    //     $payment = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    //     if (!$payment) {
+    //         header("Location: " . BASE_URL . "/admin/payments");
+    //         exit;
+    //     }
+
+    //     // 2. Mark payment as verified
+    //     $stmt = $pdo->prepare("UPDATE payments SET status = 'verified', verified_at = ? WHERE id = ?");
+    //     $stmt->execute([$now, $id]);
+
+    //     // 3. Calculate subscription duration
+    //     $startDate = date('Y-m-d');
+    //     $duration = $payment['duration_days'] ?? 30; // Use stored duration from database
+
+    //     $endDate = date('Y-m-d', strtotime("+$duration days"));
+
+    //     // 4. Create User Subscription
+    //     $stmt = $pdo->prepare("INSERT INTO user_subscriptions (user_id, plan_id, payment_id, start_date, end_date, status) VALUES (?, ?, ?, ?, ?, 'active')");
+    //     $stmt->execute([
+    //         $payment['user_id'],
+    //         $payment['plan_id'],
+    //         $id,
+    //         $startDate,
+    //         $endDate
+    //     ]);
+
+    //     // 5. Send Membership Activated Email
+    //     $subject = "Membership Activated! Welcome to SGSIT Gym";
+    //     $message = "
+    //         <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+    //             <h2 style='color: #198754;'>Payment Verified!</h2>
+    //             <p>Hello " . htmlspecialchars($payment['user_name']) . ",</p>
+    //             <p>Great news! Your payment for the <strong>" . htmlspecialchars($payment['plan_name']) . "</strong> has been verified and your membership is now <strong>Active</strong>.</p>
+    //             <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+    //                 <p style='margin: 5px 0;'><strong>Plan:</strong> " . htmlspecialchars($payment['plan_name']) . "</p>
+    //                 <p style='margin: 5px 0;'><strong>Start Date:</strong> " . date('M d, Y', strtotime($startDate)) . "</p>
+    //                 <p style='margin: 5px 0;'><strong>End Date:</strong> " . date('M d, Y', strtotime($endDate)) . "</p>
+    //                 <p style='margin: 5px 0;'><strong>Status:</strong> Active</p>
+    //             </div>
+    //             <p>You now have full access to the gym facilities, personalized diet charts, and workout plans.</p>
+    //             <div style='text-align: center; margin: 30px 0;'>
+    //                 <a href='" . BASE_URL . "/user/dashboard' style='background-color: #198754; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;'>View My Dashboard</a>
+    //             </div>
+    //             <hr style='border: 0; border-top: 1px solid #eee; margin-top: 30px;'>
+    //             <p style='font-size: 0.8rem; color: #999; text-align: center;'>SGSIT Gym Management System</p>
+    //         </div>
+    //     ";
+    //     Mailer::send($payment['user_email'], $subject, $message);
+        
+    //     header("Location: " . BASE_URL . "/admin/payments");
+    //     exit;
+    // }
 
     public function rejectPayment()
     {

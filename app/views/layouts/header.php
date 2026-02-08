@@ -189,7 +189,7 @@ body{
     <img src="https://image-static.collegedunia.com/public/college_data/images/logos/1408347301SGSITS_Indore.png" alt="SGSITS Logo">
     <div class="brand-text">
         <span class="brand-title">Gymnasium Legend</span>
-        <span class="brand-gym">ESTABLISHED. 1986</span>
+        <span class="brand-gym">1986</span>
     </div>
 </a>
 
@@ -203,6 +203,10 @@ body{
 <li class="nav-item">
     <a class="nav-link" href="<?= BASE_URL ?>/home/index">Home</a>
 </li>
+<li class="nav-item">
+    <a class="nav-link" href="<?= BASE_URL ?>/home/about">AboutUs</a>
+</li>
+
 
 <?php if (isset($_SESSION['role'])): ?>
 

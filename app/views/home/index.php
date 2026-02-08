@@ -202,8 +202,8 @@
 <section class="hero-section">
     <div class="container">
         <div class="hero-content">
-            <span class="hero-badge">Established 1986</span>
-            <h1>GYMNASIUM LEGEND <span>ESTABLISHED 1986</span></h1>
+            <span class="hero-badge">1986</span>
+            <h1>GYMNASIUM LEGEND <span>1986</span></h1>
             <p class="lead">The ultimate fitness destination exclusively designed for the students and faculty of SGSITS Indore.</p>
             
             <div class="d-flex flex-wrap gap-3 mt-4">

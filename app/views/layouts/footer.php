@@ -99,7 +99,7 @@
         
         <!-- <h4 class="">SGSIT <span>GYM</span></h4> -->
          <h4><span class="brand-main footer-brand">GYMNASIUM <span style="color:var(--brand-red)">LEGEND</span></span>
-                <span class="brand-sub footer-brand">ESTABLISHED 1986</span></h4>
+                <span class="brand-sub footer-brand">1986</span></h4>
         <p class="footer-description">
             Empowering students with strength and fitness. 
             Providing a world-class training environment within the SGSITS campus.

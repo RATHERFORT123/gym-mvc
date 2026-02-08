@@ -5,6 +5,96 @@
         <h2 class="text-warning">Manage Payments</h2>
         <a href="<?= BASE_URL ?>/admin/dashboard" class="btn btn-secondary">Back to Dashboard</a>
     </div>
+<form method="GET" action="<?= BASE_URL ?>/admin/payments"
+      class="card mb-4 shadow"
+      style="background:#0b1c2d;border:1px solid #7a1f1f;">
+  <div class="card-body">
+    <div class="row g-3">
+
+      <!-- Payment Date -->
+      <div class="col-md-3 col-sm-6">
+        <label class="text-white">Payment From</label>
+        <input type="date" name="start_date" class="form-control"
+               value="<?= $_GET['start_date'] ?? '' ?>">
+      </div>
+
+      <div class="col-md-3 col-sm-6">
+        <label class="text-white">Payment To</label>
+        <input type="date" name="end_date" class="form-control"
+               value="<?= $_GET['end_date'] ?? '' ?>">
+      </div>
+
+      <!-- Status -->
+      <div class="col-md-3 col-sm-6">
+        <label class="text-white">Payment Status</label>
+        <select name="status" class="form-select">
+          <option value="">All</option>
+          <?php foreach (['pending','verified','rejected','failed'] as $s): ?>
+            <option value="<?= $s ?>" <?= ($_GET['status'] ?? '')==$s?'selected':'' ?>>
+              <?= ucfirst($s) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+
+      <!-- Membership Expiry -->
+      <div class="col-md-3 col-sm-6">
+        <label class="text-white">Membership</label>
+        <select name="expiry_filter" class="form-select">
+          <option value="">All</option>
+          <option value="active"  <?= ($_GET['expiry_filter'] ?? '')=='active'?'selected':'' ?>>Active</option>
+          <option value="expired" <?= ($_GET['expiry_filter'] ?? '')=='expired'?'selected':'' ?>>Expired</option>
+        </select>
+      </div>
+
+      <!-- UTR -->
+      <div class="col-md-3 col-sm-6">
+        <label class="text-white">UTR Number</label>
+        <input type="text" name="utr" class="form-control"
+               value="<?= $_GET['utr'] ?? '' ?>">
+      </div>
+
+      <!-- UPI -->
+      <div class="col-md-3 col-sm-6">
+        <label class="text-white">Payer UPI</label>
+        <input type="text" name="payer_upi" class="form-control"
+               value="<?= $_GET['payer_upi'] ?? '' ?>">
+      </div>
+<div class="col-md-3 col-sm-6">
+    <label class="text-white">Account Holder Name</label>
+    <input type="text"
+           name="account_holder"
+           class="form-control"
+           placeholder="e.g. Chetan"
+           value="<?= $_GET['account_holder'] ?? '' ?>">
+</div>
+
+      <!-- Buttons -->
+      <div class="col-md-6 d-flex align-items-end gap-2">
+        <button class="btn btn-danger fw-bold">Apply</button>
+
+        <?php
+$params = $_GET;
+unset($params['url']);
+?>
+
+<a
+  href="<?= BASE_URL ?>/admin/exportPayments?<?= http_build_query($params) ?>"
+  class="btn btn-success"
+  target="_blank"
+>
+  Download Excel
+</a>
+
+
+        <a href="<?= BASE_URL ?>/admin/payments"
+           class="btn btn-secondary">Reset</a>
+      </div>
+
+    </div>
+  </div>
+</form>
+
 
     <div class="card shadow bg-dark text-white border-secondary">
         <div class="card-body">
@@ -13,9 +103,11 @@
                     <thead>
                         <tr>
                             <th>Date</th>
+                            <th>Expiry Date</th>
+
                             <th>User</th>
                             <th>Plan</th>
-                            <th>Amount</th>
+                            <th>Amount</th> 
                             <th>Payer UPI (Manual Feed)</th>
                             <th>Transaction ID (UTR)</th>
                             <th>Rejected Reason</th>
@@ -30,6 +122,12 @@
                             <?php foreach ($payments as $p): ?>
                                 <tr>
                                     <td><?= date('d M, H:i', strtotime($p['created_at'])) ?></td>
+                                    <td>
+  <?= !empty($p['expiry_date'])
+        ? date('d M Y', strtotime($p['expiry_date']))
+        : '—' ?>
+</td>
+
                                     <td>
                                         <?= htmlspecialchars($p['user_name']) ?><br>
                                         <small class="text-white"><?= htmlspecialchars($p['user_email']) ?></small>
@@ -63,7 +161,7 @@
                                     </td>
                                     <td>
                                         <?php if ($p['status'] === 'pending'): ?>
-                                            <a href="<?= BASE_URL ?>/admin/verifyPayment/<?= $p['id'] ?>" class="btn btn-sm btn-success">Verify</a>
+                                            <a  href="<?= BASE_URL ?>/admin/verifyPayment/<?= $p['id'] ?>" class="btn btn-sm btn-success">Verify</a>
                                             <button type="button" 
                                                 class="btn btn-sm btn-danger reject-payment-btn"
                                                 data-bs-toggle="modal" 
@@ -88,6 +186,45 @@
                         <?php endif; ?>
                     </tbody>
                 </table>
+                <?php if ($totalPages > 1): ?>
+<nav class="mt-4">
+  <ul class="pagination justify-content-center">
+
+    <?php
+      $params = $_GET;
+      unset($params['page'], $params['url']);
+    ?>
+
+    <!-- Previous -->
+    <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+      <a class="page-link"
+         href="?<?= http_build_query(array_merge($params, ['page' => $page - 1])) ?>">
+        Previous
+      </a>
+    </li>
+
+    <!-- Page Numbers -->
+    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+      <li class="page-item <?= $i == $page ? 'active' : '' ?>">
+        <a class="page-link"
+           href="?<?= http_build_query(array_merge($params, ['page' => $i])) ?>">
+          <?= $i ?>
+        </a>
+      </li>
+    <?php endfor; ?>
+
+    <!-- Next -->
+    <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
+      <a class="page-link"
+         href="?<?= http_build_query(array_merge($params, ['page' => $page + 1])) ?>">
+        Next
+      </a>
+    </li>
+
+  </ul>
+</nav>
+<?php endif; ?>
+
             </div>
         </div>
     </div>

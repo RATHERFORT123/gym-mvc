@@ -335,8 +335,8 @@
 
         <?php elseif ($currentPlan['payment_status'] == 'pending'): ?>
             <div class="glass-panel p-4 mb-4 text-center">
-                <div class="spinner-border text-warning mb-3" role="status"></div>
-                <h5 class="fw-bold">Payment Under Review</h5>
+                <!-- <div class="spinner-border text-warning mb-3" role="status"></div> -->
+                <h5 class="fw-bold">Payment Will verify By Admin</h5>
                 <p class="text-muted small">We are verifying your UTR for <strong><?= htmlspecialchars($currentPlan['plan_name']) ?></strong>. Hang tight!</p>
             </div>
         <?php endif; ?>

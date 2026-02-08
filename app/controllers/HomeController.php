@@ -8,4 +8,9 @@ class HomeController extends Controller
         // Or let them see the landing page. Let's let them see the landing page.
         $this->view('home/index');
     }
+    public function about()
+{
+    $this->view('home/about');
+}
+
 }
