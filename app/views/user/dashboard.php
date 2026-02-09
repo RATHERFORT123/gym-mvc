@@ -368,7 +368,8 @@
         <div class="col-md-4">
             <div class="action-tile shadow-sm opacity-75" style="cursor: default;">
                 <div class="tile-icon"><i class="fas fa-calendar-day"></i></div>
-                <h5 class="fw-bold">Attendance</h5>
+                <h5 class="fw-bold"><a href="<?= BASE_URL ?>/attendance/myAttendance">My Attendance</a>
+</h5>
                 <p class="text-muted small mb-0">Log your daily gym presence</p>
             </div>
         </div>

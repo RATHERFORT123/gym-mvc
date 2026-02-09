@@ -106,6 +106,7 @@ unset($params['url']);
                             <th>Expiry Date</th>
 
                             <th>User</th>
+                            <th>Mobile number</th>
                             <th>Plan</th>
                             <th>Amount</th> 
                             <th>Payer UPI (Manual Feed)</th>
@@ -117,20 +118,22 @@ unset($params['url']);
                     </thead>
                     <tbody>
                         <?php if (empty($payments)): ?>
-                            <tr><td colspan="8" class="text-center text-white">No payments found</td></tr>
+                            <tr><td colspan="11" class="text-center text-white">No payments found</td></tr>
                         <?php else: ?>
                             <?php foreach ($payments as $p): ?>
                                 <tr>
                                     <td><?= date('d M, H:i', strtotime($p['created_at'])) ?></td>
                                     <td>
-  <?= !empty($p['expiry_date'])
-        ? date('d M Y', strtotime($p['expiry_date']))
-        : '—' ?>
-</td>
-
+                                    <?= !empty($p['expiry_date'])
+                                          ? date('d M Y', strtotime($p['expiry_date']))
+                                          : '—' ?>
+                                  </td>
                                     <td>
                                         <?= htmlspecialchars($p['user_name']) ?><br>
                                         <small class="text-white"><?= htmlspecialchars($p['user_email']) ?></small>
+                                    </td>
+                                    <td>
+                                        <?= $p['mobile_number'] ?? 'N/A' ?>
                                     </td>
                                     <td><?= htmlspecialchars($p['plan_name']) ?></td>
                                     <td class="fw-bold text-success">₹<?= number_format($p['amount'], 2) ?></td>
@@ -161,7 +164,22 @@ unset($params['url']);
                                     </td>
                                     <td>
                                         <?php if ($p['status'] === 'pending'): ?>
-                                            <a  href="<?= BASE_URL ?>/admin/verifyPayment/<?= $p['id'] ?>" class="btn btn-sm btn-success">Verify</a>
+                                          <form
+                                            id="verify-form-<?= (int)$p['id'] ?>"
+                                            action="<?= BASE_URL ?>/admin/verifyPayment/<?= (int)$p['id'] ?>"
+                                            method="post"
+                                            class="d-inline">
+
+                                            <button
+                                                type="submit"
+                                                id="verify-btn-<?= (int)$p['id'] ?>"
+                                                class="btn btn-success btn-sm">
+                                                Verify
+                                            </button>
+                                        </form>
+
+
+
                                             <button type="button" 
                                                 class="btn btn-sm btn-danger reject-payment-btn"
                                                 data-bs-toggle="modal" 
@@ -170,16 +188,18 @@ unset($params['url']);
                                                 Reject
                                             </button>
                                         <?php endif; ?>
-                                        <button type="button" 
-                                            class="btn btn-sm btn-primary edit-payment-btn btn-mini"
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#editPaymentModal"
-                                            data-id="<?= $p['id'] ?>"
-                                            data-utr="<?= htmlspecialchars($p['utr_number'] ?? '') ?>"
-                                            data-upi="<?= htmlspecialchars($p['payer_upi'] ?? '') ?>"
-                                            data-status="<?= $p['status'] ?>">
-                                            Edit
-                                        </button>
+                                        <?php if ($p['status'] != 'verified'): ?>
+                                          <button type="button" 
+                                              class="btn btn-sm btn-primary edit-payment-btn btn-mini"
+                                              data-bs-toggle="modal" 
+                                              data-bs-target="#editPaymentModal"
+                                              data-id="<?= $p['id'] ?>"
+                                              data-utr="<?= htmlspecialchars($p['utr_number'] ?? '') ?>"
+                                              data-upi="<?= htmlspecialchars($p['payer_upi'] ?? '') ?>"
+                                              data-status="<?= $p['status'] ?>">
+                                              Edit
+                                          </button>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -310,6 +330,33 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('reject_payment_id').value = this.dataset.id;
         });
     });
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+
+
+document.querySelectorAll("form[id^='verify-form-']").forEach(form => {
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formId = this.id;
+        const paymentId = formId.replace('verify-form-', '');
+        const button = document.getElementById(`verify-btn-${paymentId}`);
+
+        if (!confirm('Verify this payment and activate subscription?')) {
+            return;
+        }
+
+        // Lock button
+        button.disabled = true;
+        button.innerText = 'Verifying...';
+
+        this.submit();
+    });
+
 });
 </script>
 

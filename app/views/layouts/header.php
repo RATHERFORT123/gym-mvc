@@ -186,7 +186,7 @@ body{
 
 <!-- BRAND -->
 <a class="navbar-brand" href="<?= BASE_URL ?>/home/index">
-    <img src="https://image-static.collegedunia.com/public/college_data/images/logos/1408347301SGSITS_Indore.png" alt="SGSITS Logo">
+    <img src="<?= BASE_URL ?>/public/logo/lo.png" alt="SGSITS Logo">
     <div class="brand-text">
         <span class="brand-title">Gymnasium Legend</span>
         <span class="brand-gym">1986</span>

@@ -1,7 +1,38 @@
 <?php
 
 class AttendanceController extends Controller
-{
+{    
+    public function myAttendance()
+    {
+        Auth::role(['user', 'faculty']);
+
+        $userId = $_SESSION['user_id'];
+        if (!$userId) {
+            die('Not logged in');
+        }
+
+        $attendanceModel = $this->model('Attendance');
+        $userModel       = $this->model('User');
+
+        $user = $userModel->getById($userId);
+        if (!$user) {
+            die('User not found');
+        }
+
+        $month = $_GET['month'] ?? date('Y-m');
+
+        $records = $attendanceModel->getByUserAndMonth($userId, $month);
+
+        // ✅ FIXED LINE
+        $dates = array_column($records, 'attendance_date');
+
+        $this->view('attendance/my_attendance', [
+            'user'  => $user,
+            'dates' => $dates,
+            'month' => $month
+        ]);
+    }
+
     public function mark()
     {
         Auth::role(['user', 'faculty']);
