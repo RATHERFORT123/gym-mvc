@@ -6,16 +6,6 @@ class UserController extends Controller
     {
         Auth::role(['user', 'faculty']);
 
-        $showProfileAlert = false;
-
-        // Show profile completion alert for non-admin users every time they reach the dashboard
-        if (isset($_SESSION['role']) && $_SESSION['role'] !== 'admin') {
-            $userModel = $this->model('User');
-            if (!$userModel->isProfileComplete($_SESSION['user_id'])) {
-                $showProfileAlert = true;
-            }
-        }
-
         // Fetch current subscription and days left
         $planModel = $this->model('Plan');
         $currentPlan = $planModel->getCurrentSubscription($_SESSION['user_id']);
@@ -43,7 +33,6 @@ class UserController extends Controller
         }
 
         $this->view('user/dashboard', [
-            'showProfileAlert' => $showProfileAlert,
             'currentPlan' => $currentPlan,
             'daysLeft' => $daysLeft,
             'activeEvents' => $activeEvents,

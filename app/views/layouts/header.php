@@ -200,12 +200,20 @@ body{
 <div class="collapse navbar-collapse" id="navbarNav">
 <ul class="navbar-nav ms-auto align-items-lg-center">
 
+<?php 
+    // Check if profile is incomplete for user/faculty
+    $isUserOrFaculty = isset($_SESSION['role']) && ($_SESSION['role'] === 'user' || $_SESSION['role'] === 'faculty');
+    $hideLinks = $isUserOrFaculty && (isset($isProfileComplete) && !$isProfileComplete);
+?>
+
+<?php if (!$hideLinks): ?>
 <li class="nav-item">
     <a class="nav-link" href="<?= BASE_URL ?>/home/index">Home</a>
 </li>
 <li class="nav-item">
     <a class="nav-link" href="<?= BASE_URL ?>/home/about">About Us</a>
 </li>
+<?php endif; ?>
 
 
 <?php if (isset($_SESSION['role'])): ?>
@@ -231,6 +239,7 @@ body{
 
 <?php else: ?>
 
+<?php if (!$hideLinks): ?>
 <li class="nav-item">
     <a class="nav-link" href="<?= BASE_URL ?>/user/dashboard">Dashboard</a>
 </li>
@@ -253,6 +262,7 @@ body{
 <li class="nav-item ms-lg-2">
     <button class="btn btn-secondary" disabled>Locked</button>
 </li>
+<?php endif; ?>
 <?php endif; ?>
 
 <?php endif; ?>

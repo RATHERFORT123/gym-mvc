@@ -162,42 +162,56 @@
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <?php if ($p['status'] === 'pending'): ?>
-                                          <form
-                                            id="verify-form-<?= (int)$p['id'] ?>"
-                                            action="<?= BASE_URL ?>/admin/verifyPayment/<?= (int)$p['id'] ?>"
-                                            method="post"
-                                            class="d-inline">
-
-                                            <button
-                                                type="submit"
-                                                id="verify-btn-<?= (int)$p['id'] ?>"
-                                                class="btn btn-success btn-sm">
-                                                Verify
-                                            </button>
-                                        </form>
-
-
-
-                                            <button type="button" 
-                                                class="btn btn-sm btn-danger reject-payment-btn"
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#rejectPaymentModal"
-                                                data-id="<?= $p['id'] ?>">
-                                                Reject
-                                            </button>
-                                        <?php endif; ?>
-                                        <?php if ($p['status'] != 'verified'): ?>
-                                          <button type="button" 
-                                              class="btn btn-sm btn-primary edit-payment-btn btn-mini"
-                                              data-bs-toggle="modal" 
-                                              data-bs-target="#editPaymentModal"
-                                              data-id="<?= $p['id'] ?>"
-                                              data-utr="<?= htmlspecialchars($p['utr_number'] ?? '') ?>"
-                                              data-upi="<?= htmlspecialchars($p['payer_upi'] ?? '') ?>"
-                                              data-status="<?= $p['status'] ?>">
-                                              Edit
-                                          </button>
+                                        <?php if ($p['status'] !== 'verified'): ?>
+                                            <div class="dropdown">
+                                                <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-dark">
+                                                    <?php if ($p['status'] === 'pending'): ?>
+                                                        <li>
+                                                            <form
+                                                                id="verify-form-<?= (int)$p['id'] ?>"
+                                                                action="<?= BASE_URL ?>/admin/verifyPayment/<?= (int)$p['id'] ?>"
+                                                                method="post"
+                                                                class="d-block">
+                                                                <button
+                                                                    type="button"
+                                                                    id="verify-btn-<?= (int)$p['id'] ?>"
+                                                                    class="dropdown-item text-success verify-payment-btn"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#verifyPaymentModal"
+                                                                    data-form-id="verify-form-<?= (int)$p['id'] ?>">
+                                                                    <i class="fas fa-check me-2"></i> Verify
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                        <li>
+                                                            <button type="button" 
+                                                                class="dropdown-item text-danger reject-payment-btn"
+                                                                data-bs-toggle="modal" 
+                                                                data-bs-target="#rejectPaymentModal"
+                                                                data-id="<?= $p['id'] ?>">
+                                                                <i class="fas fa-times me-2"></i> Reject
+                                                            </button>
+                                                        </li>
+                                                    <?php endif; ?>
+                                                    <li>
+                                                        <button type="button" 
+                                                            class="dropdown-item text-primary edit-payment-btn"
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#editPaymentModal"
+                                                            data-id="<?= $p['id'] ?>"
+                                                            data-utr="<?= htmlspecialchars($p['utr_number'] ?? '') ?>"
+                                                            data-upi="<?= htmlspecialchars($p['payer_upi'] ?? '') ?>"
+                                                            data-status="<?= $p['status'] ?>">
+                                                            <i class="fas fa-edit me-2"></i> Edit
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        <?php else: ?>
+                                            <span class="text-muted small"><i class="fas fa-check-circle"></i> Done</span>
                                         <?php endif; ?>
                                     </td>
                                 </tr>
@@ -287,6 +301,25 @@
   </div>
 </div>
 
+<!-- Verify Payment Modal -->
+<div class="modal fade" id="verifyPaymentModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-black">Confirm Verification</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-black">Are you sure you want to verify this payment and activate the subscription?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="confirmVerifyBtn">Yes, Verify</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Reject Payment Modal -->
 <div class="modal fade" id="rejectPaymentModal" tabindex="-1">
   <div class="modal-dialog">
@@ -334,28 +367,25 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+let verifyFormId = null;
 
-
-document.querySelectorAll("form[id^='verify-form-']").forEach(form => {
-
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        const formId = this.id;
-        const paymentId = formId.replace('verify-form-', '');
-        const button = document.getElementById(`verify-btn-${paymentId}`);
-
-        if (!confirm('Verify this payment and activate subscription?')) {
-            return;
-        }
-
-        // Lock button
-        button.disabled = true;
-        button.innerText = 'Verifying...';
-
-        this.submit();
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle Verify Button Click
+    document.querySelectorAll('.verify-payment-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            verifyFormId = this.dataset.formId;
+        });
     });
 
+    // Handle Confirm Verify Click
+    document.getElementById('confirmVerifyBtn').addEventListener('click', function() {
+        if (verifyFormId) {
+            const form = document.getElementById(verifyFormId);
+            if (form) {
+                form.submit();
+            }
+        }
+    });
 });
 </script>
 

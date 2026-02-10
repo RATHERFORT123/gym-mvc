@@ -187,49 +187,56 @@
 
                 <div class="mb-4">
                     <label class="form-label"><i class="fas fa-envelope-open text-muted"></i> Registered Email</label>
-                    <input type="email" class="form-control" value="<?= htmlspecialchars($profile['email']) ?>" readonly disabled>
+                    <input type="email" class="form-control" value="<?= htmlspecialchars($profile['email'] ?? '') ?>" readonly disabled>
                 </div>
 
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">First Name</label>
-                        <input type="text" name="first_name" class="form-control" value="<?= htmlspecialchars($profile['first_name'] ?? '') ?>" required>
+                        <input type="text" name="first_name" class="form-control <?= isset($errors['first_name']) ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars($profile['first_name'] ?? '') ?>" required>
+                        <?php if (isset($errors['first_name'])): ?><div class="invalid-feedback"><?= $errors['first_name'] ?></div><?php endif; ?>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Middle Name</label>
-                        <input type="text" name="middle_name" class="form-control" value="<?= htmlspecialchars($profile['middle_name'] ?? '') ?>">
+                        <input type="text" name="middle_name" class="form-control <?= isset($errors['middle_name']) ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars($profile['middle_name'] ?? '') ?>">
+                        <?php if (isset($errors['middle_name'])): ?><div class="invalid-feedback"><?= $errors['middle_name'] ?></div><?php endif; ?>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Last Name</label>
-                        <input type="text" name="last_name" class="form-control" value="<?= htmlspecialchars($profile['last_name'] ?? '') ?>" required>
+                        <input type="text" name="last_name" class="form-control <?= isset($errors['last_name']) ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars($profile['last_name'] ?? '') ?>" required>
+                        <?php if (isset($errors['last_name'])): ?><div class="invalid-feedback"><?= $errors['last_name'] ?></div><?php endif; ?>
                     </div>
                     
                     <div class="col-md-4">
                         <label class="form-label">Gender</label>
-                        <select name="gender" class="form-select">
+                        <select name="gender" class="form-select <?= isset($errors['gender']) ? 'is-invalid' : '' ?>" required>
                             <option value="">Select Gender</option>
                             <option value="Male" <?= ($profile['gender'] ?? '') == 'Male' ? 'selected' : '' ?>>Male</option>
                             <option value="Female" <?= ($profile['gender'] ?? '') == 'Female' ? 'selected' : '' ?>>Female</option>
                             <option value="Other" <?= ($profile['gender'] ?? '') == 'Other' ? 'selected' : '' ?>>Other</option>
                         </select>
+                        <?php if (isset($errors['gender'])): ?><div class="invalid-feedback"><?= $errors['gender'] ?></div><?php endif; ?>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Birth Date</label>
-                        <input type="date" name="birth_date" class="form-control" value="<?= htmlspecialchars($profile['birth_date'] ?? '') ?>">
+                        <input type="date" name="birth_date" class="form-control <?= isset($errors['birth_date']) ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars($profile['birth_date'] ?? '') ?>" required>
+                        <?php if (isset($errors['birth_date'])): ?><div class="invalid-feedback"><?= $errors['birth_date'] ?></div><?php endif; ?>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Blood Group</label>
-                        <select name="blood_group" class="form-select">
+                        <select name="blood_group" class="form-select <?= isset($errors['blood_group']) ? 'is-invalid' : '' ?>" required>
                             <option value="">Select</option>
                             <?php foreach(['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'] as $bg): ?>
                                 <option value="<?= $bg ?>" <?= ($profile['blood_group'] ?? '') == $bg ? 'selected' : '' ?>><?= $bg ?></option>
                             <?php endforeach; ?>
                         </select>
+                        <?php if (isset($errors['blood_group'])): ?><div class="invalid-feedback"><?= $errors['blood_group'] ?></div><?php endif; ?>
                     </div>
                     
                     <div class="col-12 mt-3">
                         <label class="form-label"><i class="fas fa-phone-alt"></i> Mobile Number</label>
-                        <input type="text" name="mobile_number" class="form-control" value="<?= htmlspecialchars($profile['mobile_number'] ?? '') ?>" required>
+                        <input type="text" name="mobile_number" class="form-control <?= isset($errors['mobile_number']) ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars($profile['mobile_number'] ?? '') ?>" required>
+                        <?php if (isset($errors['mobile_number'])): ?><div class="invalid-feedback"><?= $errors['mobile_number'] ?></div><?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -242,26 +249,30 @@
 
                 <div class="mb-4">
                     <label class="form-label">Enrollment Number</label>
-                    <input type="text" name="enrollment_number" class="form-control" value="<?= htmlspecialchars($profile['enrollment_number'] ?? '') ?>" placeholder="e.g. 0801CS211001" required>
+                    <input type="text" name="enrollment_number" class="form-control <?= isset($errors['enrollment_number']) ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars($profile['enrollment_number'] ?? '') ?>" placeholder="e.g. 0801CS211001" required>
+                    <?php if (isset($errors['enrollment_number'])): ?><div class="invalid-feedback"><?= $errors['enrollment_number'] ?></div><?php endif; ?>
                 </div>
 
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">College Year</label>
-                        <select name="college_year" class="form-select" required>
+                        <select name="college_year" class="form-select <?= isset($errors['college_year']) ? 'is-invalid' : '' ?>" required>
                             <option value="">Select Year</option>
                             <?php for($i=1; $i<=4; $i++): ?>
                                 <option value="<?= $i ?>" <?= ($profile['college_year'] ?? '') == $i ? 'selected' : '' ?>><?= $i . ($i==1?'st':($i==2?'nd':($i==3?'rd':'th'))) ?> Year</option>
                             <?php endfor; ?>
                         </select>
+                        <?php if (isset($errors['college_year'])): ?><div class="invalid-feedback"><?= $errors['college_year'] ?></div><?php endif; ?>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Semester</label>
-                        <input type="number" name="semester" class="form-control" min="1" max="8" value="<?= htmlspecialchars($profile['semester'] ?? '') ?>" required>
+                        <input type="number" name="semester" class="form-control <?= isset($errors['semester']) ? 'is-invalid' : '' ?>" min="1" max="8" value="<?= htmlspecialchars($profile['semester'] ?? '') ?>" required>
+                        <?php if (isset($errors['semester'])): ?><div class="invalid-feedback"><?= $errors['semester'] ?></div><?php endif; ?>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Branch</label>
-                        <input type="text" name="branch" class="form-control" placeholder="e.g. CS, IT" value="<?= htmlspecialchars($profile['branch'] ?? '') ?>" required>
+                        <input type="text" name="branch" class="form-control <?= isset($errors['branch']) ? 'is-invalid' : '' ?>" placeholder="e.g. CS, IT" value="<?= htmlspecialchars($profile['branch'] ?? '') ?>" required>
+                        <?php if (isset($errors['branch'])): ?><div class="invalid-feedback"><?= $errors['branch'] ?></div><?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -275,19 +286,22 @@
                 <div class="row g-3">
                     <div class="col-md-3">
                         <label class="form-label">Height (cm)</label>
-                        <input type="number" step="0.01" name="height" class="form-control" value="<?= htmlspecialchars($profile['height_cm'] ?? '') ?>">
+                        <input type="number" step="0.01" name="height" class="form-control <?= isset($errors['height']) ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars($profile['height_cm'] ?? '') ?>" required>
+                        <?php if (isset($errors['height'])): ?><div class="invalid-feedback"><?= $errors['height'] ?></div><?php endif; ?>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Weight (kg)</label>
-                        <input type="number" step="0.01" name="weight" class="form-control" value="<?= htmlspecialchars($profile['weight_kg'] ?? '') ?>">
+                        <input type="number" step="0.01" name="weight" class="form-control <?= isset($errors['weight']) ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars($profile['weight_kg'] ?? '') ?>" required>
+                        <?php if (isset($errors['weight'])): ?><div class="invalid-feedback"><?= $errors['weight'] ?></div><?php endif; ?>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Waist (cm)</label>
-                        <input type="number" step="0.01" name="waist_size" class="form-control" value="<?= htmlspecialchars($profile['waist_size'] ?? '') ?>">
+                        <input type="number" step="0.01" name="waist_size" class="form-control <?= isset($errors['waist_size']) ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars($profile['waist_size'] ?? '') ?>" required>
+                        <?php if (isset($errors['waist_size'])): ?><div class="invalid-feedback"><?= $errors['waist_size'] ?></div><?php endif; ?>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Fitness Goal</label>
-                        <select name="fitness_goal" class="form-select" required>
+                        <select name="fitness_goal" class="form-select <?= isset($errors['fitness_goal']) ? 'is-invalid' : '' ?>" required>
                             <option value="">Select Goal</option>
                             <option value="Weight Loss" <?= ($profile['fitness_goal'] ?? '') == 'Weight Loss' ? 'selected' : '' ?>>Weight Loss</option>
                             <option value="Muscle Gain" <?= ($profile['fitness_goal'] ?? '') == 'Muscle Gain' ? 'selected' : '' ?>>Muscle Gain</option>
@@ -295,6 +309,7 @@
                             <option value="General Fitness" <?= ($profile['fitness_goal'] ?? '') == 'General Fitness' ? 'selected' : '' ?>>General Fitness</option>
                             <option value="Endurance" <?= ($profile['fitness_goal'] ?? '') == 'Endurance' ? 'selected' : '' ?>>Endurance</option>
                         </select>
+                        <?php if (isset($errors['fitness_goal'])): ?><div class="invalid-feedback"><?= $errors['fitness_goal'] ?></div><?php endif; ?>
                     </div>
                 </div>
             </div>

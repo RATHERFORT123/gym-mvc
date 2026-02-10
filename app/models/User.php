@@ -163,7 +163,19 @@ public function updateProfile($userId, $data, $role)
     }
 
     $stmt = $this->db->prepare($sql);
-    return $stmt->execute($params);
+    $result = $stmt->execute($params);
+
+    // Sync updated name to the main users table
+    if ($result) {
+        $firstName = $data['first_name'] ?? '';
+        $lastName = $data['last_name'] ?? '';
+        $fullName = trim($firstName . ' ' . $lastName);
+        if (!empty($fullName)) {
+            $this->db->prepare("UPDATE users SET name = ? WHERE id = ?")->execute([$fullName, $userId]);
+        }
+    }
+
+    return $result;
 }
 
    public function getUsersByRole($role)

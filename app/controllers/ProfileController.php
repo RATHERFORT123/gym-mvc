@@ -68,15 +68,47 @@ class ProfileController extends Controller
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+            $errors = [];
+            $data = $_POST; // Capture all input to repopulate form
+            
+            // Map form fields to DB columns for view compatibility
+            $data['height_cm'] = $_POST['height'] ?? '';
+            $data['weight_kg'] = $_POST['weight'] ?? '';
+
             // Validate Names (Alphabets only)
             $fName = $_POST['first_name'] ?? '';
             $lName = $_POST['last_name'] ?? '';
             $mName = $_POST['middle_name'] ?? '';
 
             if (!preg_match("/^[a-zA-Z\s]+$/", $fName) || !preg_match("/^[a-zA-Z\s]+$/", $lName) || (!empty($mName) && !preg_match("/^[a-zA-Z\s]+$/", $mName))) {
-                $_SESSION['error'] = "Names must contain only alphabets.";
-                header("Location: " . BASE_URL . "/profile/edit");
-                exit;
+                $errors['first_name'] = "Names must contain only alphabets.";
+            }
+
+            // Common Required Fields Validation
+            $commonRequired = [
+                'gender' => 'Gender',
+                'birth_date' => 'Birth Date',
+                'blood_group' => 'Blood Group',
+                'mobile_number' => 'Mobile Number',
+                'height' => 'Height (cm)',
+                'weight' => 'Weight (kg)',
+                'fitness_goal' => 'Fitness Goal',
+                'waist_size' => 'Waist Size'
+            ];
+
+            foreach ($commonRequired as $key => $label) {
+                if (empty($_POST[$key])) {
+                    $errors[$key] = "$label is required.";
+                }
+            }
+
+            // Numeric & Format Validations
+            if (!empty($_POST['height']) && !is_numeric($_POST['height'])) $errors['height'] = "Height must be a number.";
+            if (!empty($_POST['weight']) && !is_numeric($_POST['weight'])) $errors['weight'] = "Weight must be a number.";
+            if (!empty($_POST['waist_size']) && !is_numeric($_POST['waist_size'])) $errors['waist_size'] = "Waist Size must be a number.";
+
+            if (!empty($_POST['mobile_number']) && !preg_match('/^[0-9]{10}$/', $_POST['mobile_number'])) {
+                $errors['mobile_number'] = "Mobile Number must be exactly 10 digits.";
             }
 
             $role = $_SESSION['role'];
@@ -85,6 +117,20 @@ class ProfileController extends Controller
             // FACULTY PROFILE DATA
             // ==========================
             if ($role === 'faculty') {
+
+                // Faculty Specific Required Fields
+                $facultyRequired = [
+                    'department' => 'Department',
+                    'position' => 'Position',
+                    'subject_expert' => 'Subject Expert',
+                    'employee_code' => 'Employee Code'
+                ];
+
+                foreach ($facultyRequired as $key => $label) {
+                    if (empty($_POST[$key])) {
+                        $errors[$key] = "$label is required.";
+                    }
+                }
 
                 $height = $_POST['height'] ?? '';
                 $weight = $_POST['weight'] ?? '';
@@ -98,7 +144,7 @@ class ProfileController extends Controller
                     }
                 }
 
-                $data = [
+                $updateData = [
                     'first_name' => $_POST['first_name'] ?? '',
                     'last_name' => $_POST['last_name'] ?? '',
                     'middle_name' => $_POST['middle_name'] ?? '',
@@ -122,6 +168,20 @@ class ProfileController extends Controller
             // ==========================
             else {
 
+                // Student Specific Required Fields
+                $studentRequired = [
+                    'enrollment_number' => 'Enrollment Number',
+                    'college_year' => 'College Year',
+                    'semester' => 'Semester',
+                    'branch' => 'Branch'
+                ];
+
+                foreach ($studentRequired as $key => $label) {
+                    if (empty($_POST[$key])) {
+                        $errors[$key] = "$label is required.";
+                    }
+                }
+
                 $height = $_POST['height'] ?? '';
                 $weight = $_POST['weight'] ?? '';
                 $bmiIndex = null;
@@ -134,7 +194,7 @@ class ProfileController extends Controller
                     }
                 }
 
-                $data = [
+                $updateData = [
                     'first_name' => $_POST['first_name'] ?? '',
                     'last_name' => $_POST['last_name'] ?? '',
                     'middle_name' => $_POST['middle_name'] ?? '',
@@ -154,9 +214,23 @@ class ProfileController extends Controller
                 ];
             }
 
+            // If there are validation errors, reload view with data and errors
+            if (!empty($errors)) {
+                // Restore email for the view (since disabled inputs aren't posted)
+                $user = $this->model('User')->getById($_SESSION['user_id']);
+                $data['email'] = $user['email'] ?? '';
+
+                $viewName = ($role === 'faculty') ? 'faculty/edit_profile' : 'user/edit_profile';
+                $this->view($viewName, [
+                    'profile' => $data,
+                    'errors' => $errors
+                ]);
+                return;
+            }
+
             $this->model('User')->updateProfile(
                 $_SESSION['user_id'],
-                $data,
+                $updateData,
                 $role
             );
 

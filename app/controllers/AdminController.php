@@ -139,7 +139,11 @@ public function dashboard()
             exit;
         }
 
-        $this->view('admin/assign_plan', ['user' => $user]);
+        // Fetch existing plan to pre-fill
+        $planModel = $this->model('Plan');
+        $existingPlan = $planModel->getUserPlan($userId) ?: [];
+
+        $this->view('admin/assign_plan', ['user' => $user, 'existingPlan' => $existingPlan]);
     }
 
     // Admin: view/edit plans master prices
@@ -739,8 +743,38 @@ public function verifyPayment($id)
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+            $userId = $_POST['user_id'] ?? null;
+
+            if (empty($userId)) {
+                $_SESSION['flash_error'] = "Please select a user to assign the plan.";
+                header("Location: " . BASE_URL . "/admin/users");
+                exit;
+            }
+
+            // Validate Profile Completion
+            $userModel = $this->model('User');
+            $user = $userModel->getById($userId);
+            $profile = $userModel->getProfile($userId);
+
+            $missingFields = [];
+            if (empty($profile['height_cm'])) $missingFields[] = "Height";
+            if (empty($profile['weight_kg'])) $missingFields[] = "Weight";
+            if (empty($profile['fitness_goal'])) $missingFields[] = "Fitness Goal";
+
+            // Check Branch/Sem only for students (role='user')
+            if ($user && $user['role'] === 'user') {
+                if (empty($profile['branch'])) $missingFields[] = "Branch";
+                if (empty($profile['semester'])) $missingFields[] = "Semester";
+            }
+
+            if (!empty($missingFields)) {
+                $_SESSION['flash_error'] = "Cannot assign plan. User profile is incomplete: " . implode(', ', $missingFields);
+                header("Location: " . BASE_URL . "/admin/assignPlan/" . $userId);
+                exit;
+            }
+
             $data = [
-                'user_id' => $_POST['user_id'],
+                'user_id' => $userId,
                 'plan_name' => $_POST['plan_name'],
                 'workout_plan' => $_POST['workout_plan'],
                 'diet_plan' => $_POST['diet_plan'],

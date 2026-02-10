@@ -234,6 +234,14 @@
         </div>
     </div>
 
+    <?php if (isset($isProfileComplete) && !$isProfileComplete): ?>
+        <div class="alert alert-warning shadow-sm border-warning mb-4" role="alert">
+            <h4 class="alert-heading"><i class="fas fa-user-edit me-2"></i>Profile Incomplete</h4>
+            <p>Please complete your profile details (Height, Weight, Goal) to get personalized workout plans.</p>
+            <a href="<?= BASE_URL ?>/profile/edit" class="btn btn-warning text-dark fw-bold">Complete Profile Now</a>
+        </div>
+    <?php endif; ?>
+
     <?php if (!empty($paymentDeclined)): ?>
         <div class="alert alert-danger alert-dismissible fade show shadow-sm border-danger mb-4" role="alert">
             <h4 class="alert-heading"><i class="fas fa-exclamation-circle me-2"></i>Payment Declined</h4>

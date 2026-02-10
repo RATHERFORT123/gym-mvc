@@ -51,6 +51,7 @@ class Database
             role ENUM('admin','user','faculty') DEFAULT 'user',
             is_verified BOOLEAN DEFAULT 0,
             is_active BOOLEAN DEFAULT 1,
+            is_profile_complete BOOLEAN DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
@@ -257,6 +258,16 @@ class Database
             try {
                 self::$pdo->exec("ALTER TABLE payments ADD COLUMN transaction_date DATE DEFAULT NULL AFTER utr_number");
             } catch (Exception $e) { /* Column might already exist */ }
+
+            // Add is_profile_complete to users
+            try {
+                self::$pdo->exec("ALTER TABLE users ADD COLUMN is_profile_complete BOOLEAN DEFAULT 0 AFTER is_active");
+            } catch (Exception $e) { /* Column might already exist */ }
+
+            // Auto-update existing users who have profile data
+            try {
+                self::$pdo->exec("UPDATE users u JOIN user_profiles up ON u.id = up.user_id SET u.is_profile_complete = 1");
+            } catch (Exception $e) {}
 
         } catch (Exception $e) {}
 

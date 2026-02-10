@@ -6,7 +6,6 @@
         -ms-overflow-style: none;  /* IE and Edge */
         scrollbar-width: none;  /* Firefox */
         scroll-snap-type: x mandatory;
-        justify-content: flex-start; /* Prevent clipping on desktop */
     }
     #plansContainer::-webkit-scrollbar {
         display: none;
@@ -21,7 +20,7 @@
     /* Mobile Specifics */
     @media (max-width: 768px) {
         #plansContainer {
-            justify-content: flex-start !important;
+            justify-content: flex-start;
         }
         .plan-card {
             width: 85vw !important; /* Show one card mostly */
@@ -56,7 +55,7 @@
                 </svg>
             </button>
 
-            <div class="d-flex gap-3 pb-3" id="plansContainer" style="overflow-x: auto; flex-wrap: nowrap; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; padding: 20px 0; width: 100%;">
+            <div class="d-flex gap-3 pb-3" id="plansContainer" style="overflow-x: auto; flex-wrap: nowrap; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; padding: 20px 0; width: 100%; justify-content: <?= count($plans) > 1 ? 'flex-start' : 'center' ?>;">
             <?php foreach ($plans as $p): ?>
                 <?php $key = $p['plan_key']; ?>
                 <?php 
@@ -160,6 +159,7 @@
     (function(){
         function hideOthers(card){
             document.querySelectorAll('#plansContainer .plan-card').forEach(c=>{ if(c!==card) c.classList.add('d-none'); });
+            document.getElementById('plansContainer').style.justifyContent = 'center';
         }
         function showAll(){
             document.querySelectorAll('#plansContainer .plan-card').forEach(c=>{ 
@@ -181,6 +181,9 @@
             });
             // Show arrows again after reset
             document.querySelectorAll('.slider-arrow').forEach(a => a.style.display = 'flex');
+            const container = document.getElementById('plansContainer');
+            const totalCards = container.querySelectorAll('.plan-card').length;
+            container.style.justifyContent = totalCards > 1 ? 'flex-start' : 'center';
         }
 
         // Debug: Listen for all form submissions to catch rogue ones
@@ -558,6 +561,11 @@
         });
 
         // Initialize state to ensure back of cards are hidden
+        showAll();
+    })();
+</script>
+
+<?php include __DIR__ . '/../layouts/footer.php'; ?>are hidden
         showAll();
     })();
 </script>
