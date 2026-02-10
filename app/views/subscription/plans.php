@@ -1,5 +1,34 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 
+<style>
+    /* Custom Scrollbar Hide */
+    #plansContainer {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+        scroll-snap-type: x mandatory;
+        justify-content: flex-start; /* Prevent clipping on desktop */
+    }
+    #plansContainer::-webkit-scrollbar {
+        display: none;
+    }
+    
+    /* Card Styling for Slider */
+    .plan-card {
+        flex: 0 0 auto;
+        scroll-snap-align: center;
+    }
+
+    /* Mobile Specifics */
+    @media (max-width: 768px) {
+        #plansContainer {
+            justify-content: flex-start !important;
+        }
+        .plan-card {
+            width: 85vw !important; /* Show one card mostly */
+        }
+    }
+</style>
+
 <div class="row">
     <div class="col-12 px-4">
         <div class="text-center mb-4">
@@ -16,21 +45,29 @@
 
         <div class="position-relative">
             <!-- Navigation Arrows -->
-            <button class="btn btn-outline-warning position-absolute translate-middle-y d-none d-md-flex align-items-center justify-content-center border-0 border-radius-circle shadow-lg slider-arrow arrow-prev" style="top: 50%; left: -20px; z-index: 10; width: 45px; height: 45px; background: rgba(0,0,0,0.6); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);">
+            <button class="btn btn-outline-warning position-absolute translate-middle-y d-flex align-items-center justify-content-center border-0 border-radius-circle shadow-lg slider-arrow arrow-prev" style="top: 50%; left: -10px; z-index: 10; width: 45px; height: 45px; background: rgba(0,0,0,0.6); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
                     <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
                 </svg>
             </button>
-            <button class="btn btn-outline-warning position-absolute translate-middle-y d-none d-md-flex align-items-center justify-content-center border-0 border-radius-circle shadow-lg slider-arrow arrow-next" style="top: 50%; right: -20px; z-index: 10; width: 45px; height: 45px; background: rgba(0,0,0,0.6); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);">
+            <button class="btn btn-outline-warning position-absolute translate-middle-y d-flex align-items-center justify-content-center border-0 border-radius-circle shadow-lg slider-arrow arrow-next" style="top: 50%; right: -10px; z-index: 10; width: 45px; height: 45px; background: rgba(0,0,0,0.6); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
                     <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
                 </svg>
             </button>
 
-            <div class="d-flex justify-content-center gap-3 pb-3" id="plansContainer" style="overflow-x: auto; flex-wrap: nowrap; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; padding: 20px 0;">
+            <div class="d-flex gap-3 pb-3" id="plansContainer" style="overflow-x: auto; flex-wrap: nowrap; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; padding: 20px 0; width: 100%;">
             <?php foreach ($plans as $p): ?>
                 <?php $key = $p['plan_key']; ?>
-                <?php $displayPrice = (isset($_SESSION['role']) && $_SESSION['role'] === 'faculty') ? $p['price_faculty'] : $p['price_user']; ?>
+                <?php 
+                    $displayPrice = $p['price_user'];
+                    if (isset($_SESSION['role']) && $_SESSION['role'] === 'faculty') {
+                        $displayPrice = $p['price_faculty'];
+                    } elseif (isset($userGender) && $userGender === 'Female') {
+                        $displayPrice = $p['price_female'];
+                    }
+                    $currentUpi = !empty($p['upi_id']) ? $p['upi_id'] : ($global_upi ?? '');
+                ?>
                 <div class="plan-card" style="width: 300px; perspective: 1200px;">
                     <div class="card shadow-lg border-0 bg-dark text-light position-relative">
 
@@ -39,6 +76,11 @@
                             <div class="card-front card-body p-4 text-center">
                                 <h4 class="text-warning mb-2"><?= htmlspecialchars($p['name']) ?></h4>
                                 <div class="mb-3 display-6">₹<?= number_format($displayPrice) ?></div>
+                                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'faculty'): ?>
+                                    <div class="mb-3"><span class="badge bg-info text-dark">Faculty Price</span></div>
+                                <?php elseif (isset($userGender) && $userGender === 'Female'): ?>
+                                    <div class="mb-3"><span class="badge" style="background-color: #e83e8c;">Female Price</span></div>
+                                <?php endif; ?>
                                 <p class="text-white">Access workouts, diet plans and gym attendance</p>
                                 <?php if (!empty($hasActiveVerifiedSubscription)): ?>
                                     <button class="btn btn-secondary" disabled>Active Subscription</button>
@@ -57,7 +99,7 @@
 
                                 <div class="payment-details">
                                     <div class="mb-2 d-flex justify-content-center align-items-center gap-2">
-                                        <small>UPI ID: <strong class="upi-id text-warning"><?= UPI_ID ?></strong></small>
+                                        <small>UPI ID: <strong class="upi-id text-warning"><?= htmlspecialchars($currentUpi) ?></strong></small>
                                         <button type="button" class="btn btn-sm btn-outline-light copy-upi-btn" title="Copy UPI ID" style="padding: 2px 6px; line-height: 1;">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-copy" viewBox="0 0 16 16">
                                               <path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2Zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H6ZM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2Z"/>
@@ -347,13 +389,15 @@
         const nextBtn = document.querySelector('.arrow-next');
 
         if (container && prevBtn && nextBtn) {
-            const scrollAmount = 320; // card width + gap
-            
             nextBtn.addEventListener('click', () => {
+                const card = container.querySelector('.plan-card');
+                const scrollAmount = card ? (card.offsetWidth + 16) : 320; // width + gap (approx 1rem)
                 container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
             });
             
             prevBtn.addEventListener('click', () => {
+                const card = container.querySelector('.plan-card');
+                const scrollAmount = card ? (card.offsetWidth + 16) : 320;
                 container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
             });
 

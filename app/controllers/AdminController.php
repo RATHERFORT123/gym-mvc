@@ -16,6 +16,7 @@ public function dashboard()
 
     $userModel = $this->model('User');
     $attendanceModel = $this->model('Attendance');
+    $planModel = $this->model('Plan');
 
     $stats = [
         'total_users'      => $userModel->countByRole('user'),
@@ -23,7 +24,11 @@ public function dashboard()
         'today_attendance' => $attendanceModel->getTodayCount()
     ];
 
-    $this->view('admin/dashboard', ['stats' => $stats]);
+    // Fetch settings
+    $cron_times_json = $planModel->getSetting('cron_reminder_times');
+    $cron_times = json_decode($cron_times_json ?? '', true);
+
+    $this->view('admin/dashboard', ['stats' => $stats, 'cron_times' => $cron_times]);
 }
 
     // ==========================
@@ -93,6 +98,7 @@ public function dashboard()
         Auth::role(['admin']);
 
         $this->model('User')->delete($id);
+        $_SESSION['flash_success'] = "User deleted successfully.";
 
         // Redirect back safely
         $redirect = $_SERVER['HTTP_REFERER'] ?? BASE_URL . "/admin/dashboard";
@@ -109,6 +115,7 @@ public function dashboard()
 
         $status = $_GET['status'] ?? 1;
         $this->model('User')->updateStatus($id, $status);
+        $_SESSION['flash_success'] = "User status updated successfully.";
 
         // Redirect back safely
         $redirect = $_SERVER['HTTP_REFERER'] ?? BASE_URL . "/admin/dashboard";
@@ -142,9 +149,11 @@ public function dashboard()
         $planModel = $this->model('Plan');
         $plans = $planModel->getAllMasterPlans();
         $global_upi = $planModel->getSetting('global_upi');
+        $cron_days = $planModel->getSetting('cron_reminder_days');
         $this->view('admin/plans', [
             'plans' => $plans,
-            'global_upi' => $global_upi
+            'global_upi' => $global_upi,
+            'cron_days' => $cron_days
         ]);
     }
 
@@ -495,217 +504,101 @@ public function exportPayments()
     $writer->save('php://output');
     exit;
 }
+
 public function verifyPayment($id)
 {
     Auth::role(['admin']);
     $pdo = Database::getInstance();
     $now = date('Y-m-d H:i:s');
 
-    try {
-        $pdo->beginTransaction();
+    // 1. Fetch payment details with plan and user info
+    $stmt = $pdo->prepare("
+        SELECT p.*, pm.duration_days, pm.name AS plan_name,
+               u.name AS user_name, u.email AS user_email
+        FROM payments p
+        JOIN plans_master pm ON pm.id = p.plan_id
+        JOIN users u ON u.id = p.user_id
+        WHERE p.id = ?
+    ");
+    $stmt->execute([$id]);
+    $payment = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Fetch payment
-        $stmt = $pdo->prepare("
-            SELECT p.*, pm.duration_days, pm.name AS plan_name,
-                   u.name AS user_name, u.email AS user_email
-            FROM payments p
-            JOIN plans_master pm ON pm.id = p.plan_id
-            JOIN users u ON u.id = p.user_id
-            WHERE p.id = ?
-        ");
-        $stmt->execute([$id]);
-        $payment = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$payment) {
-            $pdo->rollBack();
-            header("Location: " . BASE_URL . "/admin/payments?msg=not_found");
-            exit;
-        }
-
-        if ($payment['status'] === 'verified') {
-            $pdo->rollBack();
-            header("Location: " . BASE_URL . "/admin/payments?msg=already_verified");
-            exit;
-        }
-
-        // Prevent duplicate subscription
-        $stmt = $pdo->prepare("SELECT id FROM user_subscriptions WHERE payment_id = ?");
-        $stmt->execute([$id]);
-        if ($stmt->fetch()) {
-            $pdo->rollBack();
-            header("Location: " . BASE_URL . "/admin/payments?msg=sub_exists");
-            exit;
-        }
-
-        // Verify payment
-        $stmt = $pdo->prepare("
-            UPDATE payments SET status='verified', verified_at=? WHERE id=?
-        ");
-        $stmt->execute([$now, $id]);
-
-        // Dates
-        $startDate = date('Y-m-d');
-        $duration  = $payment['duration_days'] ?? 30;
-        $endDate   = date('Y-m-d', strtotime("+$duration days"));
-
-        // Insert subscription
-        $stmt = $pdo->prepare("
-            INSERT INTO user_subscriptions
-            (user_id, plan_id, payment_id, start_date, end_date, status)
-            VALUES (?, ?, ?, ?, ?, 'active')
-        ");
-        $stmt->execute([
-            $payment['user_id'],
-            $payment['plan_id'],
-            $id,
-            $startDate,
-            $endDate
-        ]);
-
-        $pdo->commit();
-
-        // Email (FAIL-SAFE)
-        try {
-                // 7. Send email (only after success)
-        $subject = "Membership Activated! Welcome to SGSIT Gym";
-
-$message = "
-<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
-    <h2 style='color: #198754;'>Payment Verified!</h2>
-
-    <p>Hello " . htmlspecialchars($payment['user_name']) . ",</p>
-
-    <p>
-        Great news! Your payment for the 
-        <strong>" . htmlspecialchars($payment['plan_name']) . "</strong> 
-        has been verified and your membership is now 
-        <strong>Active</strong>.
-    </p>
-
-    <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;'>
-        <p style='margin: 5px 0;'>
-            <strong>Plan:</strong> " . htmlspecialchars($payment['plan_name']) . "
-        </p>
-        <p style='margin: 5px 0;'>
-            <strong>Start Date:</strong> " . date('M d, Y', strtotime($startDate)) . "
-        </p>
-        <p style='margin: 5px 0;'>
-            <strong>End Date:</strong> " . date('M d, Y', strtotime($endDate)) . "
-        </p>
-        <p style='margin: 5px 0;'>
-            <strong>Status:</strong> Active
-        </p>
-    </div>
-
-    <p>
-        You now have full access to the gym facilities, personalized diet charts, and workout plans.
-    </p>
-
-    <div style='text-align: center; margin: 30px 0;'>
-        <a href='" . BASE_URL . "/user/dashboard'
-           style='background-color: #198754; color: white; padding: 12px 25px;
-                  text-decoration: none; border-radius: 5px; font-weight: bold;'>
-           View My Dashboard
-        </a>
-    </div>
-
-    <hr style='border: 0; border-top: 1px solid #eee; margin-top: 30px;'>
-
-    <p style='font-size: 0.8rem; color: #999; text-align: center;'>
-        SGSIT Gym Management System
-    </p>
-</div>
-";
-
-        Mailer::send($payment['user_email'], $subject, $message);
-
-        } catch (Throwable $e) {
-            error_log("Email failed: " . $e->getMessage());
-        }
-
-        header("Location: " . BASE_URL . "/admin/payments?msg=verified");
-        exit;
-
-    } catch (Throwable $e) {
-        $pdo->rollBack();
-        error_log($e->getMessage());
-        header("Location: " . BASE_URL . "/admin/payments?msg=error");
+    if (!$payment) {
+        header("Location: " . BASE_URL . "/admin/payments");
         exit;
     }
+
+    // 2. Check if already verified
+    if ($payment['status'] === 'verified') {
+        header("Location: " . BASE_URL . "/admin/payments");
+        exit;
+    }
+
+    // 3. Prevent duplicate subscription
+    $stmt = $pdo->prepare("SELECT id FROM user_subscriptions WHERE payment_id = ?");
+    $stmt->execute([$id]);
+    if ($stmt->fetch()) {
+        // Subscription exists, just update payment status
+        $stmt = $pdo->prepare("UPDATE payments SET status='verified', verified_at=? WHERE id=?");
+        $stmt->execute([$now, $id]);
+        header("Location: " . BASE_URL . "/admin/payments");
+        exit;
+    }
+
+    // 4. Update Payment Status
+    $stmt = $pdo->prepare("UPDATE payments SET status='verified', verified_at=? WHERE id=?");
+    $stmt->execute([$now, $id]);
+
+    // 5. Create Subscription
+    $startDate = date('Y-m-d');
+    $duration  = $payment['duration_days'] ?? 30;
+    $endDate   = date('Y-m-d', strtotime("+$duration days"));
+
+    $stmt = $pdo->prepare("
+        INSERT INTO user_subscriptions
+        (user_id, plan_id, payment_id, start_date, end_date, status)
+        VALUES (?, ?, ?, ?, ?, 'active')
+    ");
+    $stmt->execute([
+        $payment['user_id'],
+        $payment['plan_id'],
+        $id,
+        $startDate,
+        $endDate
+    ]);
+
+    // 6. Send Email
+    try {
+        $subject = "Membership Activated! Welcome to SGSIT Gym";
+        $message = "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+            <h2 style='color: #198754;'>Payment Verified!</h2>
+            <p>Hello " . htmlspecialchars($payment['user_name']) . ",</p>
+            <p>Great news! Your payment for the <strong>" . htmlspecialchars($payment['plan_name']) . "</strong> has been verified and your membership is now <strong>Active</strong>.</p>
+            <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                <p style='margin: 5px 0;'><strong>Plan:</strong> " . htmlspecialchars($payment['plan_name']) . "</p>
+                <p style='margin: 5px 0;'><strong>Start Date:</strong> " . date('M d, Y', strtotime($startDate)) . "</p>
+                <p style='margin: 5px 0;'><strong>End Date:</strong> " . date('M d, Y', strtotime($endDate)) . "</p>
+                <p style='margin: 5px 0;'><strong>Status:</strong> Active</p>
+            </div>
+            <p>You now have full access to the gym facilities, personalized diet charts, and workout plans.</p>
+            <div style='text-align: center; margin: 30px 0;'>
+                <a href='" . BASE_URL . "/user/dashboard' style='background-color: #198754; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;'>View My Dashboard</a>
+            </div>
+            <hr style='border: 0; border-top: 1px solid #eee; margin-top: 30px;'>
+            <p style='font-size: 0.8rem; color: #999; text-align: center;'>SGSIT Gym Management System</p>
+        </div>
+        ";
+        Mailer::send($payment['user_email'], $subject, $message);
+    } catch (\Throwable $e) {
+        // Log error but continue
+        error_log("Email failed: " . $e->getMessage());
+    }
+
+    $_SESSION['flash_success'] = "Payment verified and subscription activated!";
+    header("Location: " . BASE_URL . "/admin/payments");
+    exit;
 }
-
-    
-
- 
-
-    // public function verifyPayment($id)
-    // {
-    //     Auth::role(['admin']);
-    //     $pdo = Database::getInstance();
-    //     $now = date('Y-m-d H:i:s');
-        
-    //     // 1. Get payment, plan and USER details
-    //     $stmt = $pdo->prepare("
-    //         SELECT p.*, pm.plan_key, pm.duration_days, pm.name as plan_name, u.name as user_name, u.email as user_email
-    //         FROM payments p 
-    //         JOIN plans_master pm ON pm.id = p.plan_id 
-    //         JOIN users u ON u.id = p.user_id
-    //         WHERE p.id = ?
-    //     ");
-    //     $stmt->execute([$id]);
-    //     $payment = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    //     if (!$payment) {
-    //         header("Location: " . BASE_URL . "/admin/payments");
-    //         exit;
-    //     }
-
-    //     // 2. Mark payment as verified
-    //     $stmt = $pdo->prepare("UPDATE payments SET status = 'verified', verified_at = ? WHERE id = ?");
-    //     $stmt->execute([$now, $id]);
-
-    //     // 3. Calculate subscription duration
-    //     $startDate = date('Y-m-d');
-    //     $duration = $payment['duration_days'] ?? 30; // Use stored duration from database
-
-    //     $endDate = date('Y-m-d', strtotime("+$duration days"));
-
-    //     // 4. Create User Subscription
-    //     $stmt = $pdo->prepare("INSERT INTO user_subscriptions (user_id, plan_id, payment_id, start_date, end_date, status) VALUES (?, ?, ?, ?, ?, 'active')");
-    //     $stmt->execute([
-    //         $payment['user_id'],
-    //         $payment['plan_id'],
-    //         $id,
-    //         $startDate,
-    //         $endDate
-    //     ]);
-
-    //     // 5. Send Membership Activated Email
-    //     $subject = "Membership Activated! Welcome to SGSIT Gym";
-    //     $message = "
-    //         <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
-    //             <h2 style='color: #198754;'>Payment Verified!</h2>
-    //             <p>Hello " . htmlspecialchars($payment['user_name']) . ",</p>
-    //             <p>Great news! Your payment for the <strong>" . htmlspecialchars($payment['plan_name']) . "</strong> has been verified and your membership is now <strong>Active</strong>.</p>
-    //             <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;'>
-    //                 <p style='margin: 5px 0;'><strong>Plan:</strong> " . htmlspecialchars($payment['plan_name']) . "</p>
-    //                 <p style='margin: 5px 0;'><strong>Start Date:</strong> " . date('M d, Y', strtotime($startDate)) . "</p>
-    //                 <p style='margin: 5px 0;'><strong>End Date:</strong> " . date('M d, Y', strtotime($endDate)) . "</p>
-    //                 <p style='margin: 5px 0;'><strong>Status:</strong> Active</p>
-    //             </div>
-    //             <p>You now have full access to the gym facilities, personalized diet charts, and workout plans.</p>
-    //             <div style='text-align: center; margin: 30px 0;'>
-    //                 <a href='" . BASE_URL . "/user/dashboard' style='background-color: #198754; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;'>View My Dashboard</a>
-    //             </div>
-    //             <hr style='border: 0; border-top: 1px solid #eee; margin-top: 30px;'>
-    //             <p style='font-size: 0.8rem; color: #999; text-align: center;'>SGSIT Gym Management System</p>
-    //         </div>
-    //     ";
-    //     Mailer::send($payment['user_email'], $subject, $message);
-        
-    //     header("Location: " . BASE_URL . "/admin/payments");
-    //     exit;
-    // }
 
     public function rejectPayment()
     {
@@ -733,6 +626,7 @@ $message = "
                     Mailer::send($payment['email'], $subject, $message);
                 }
             }
+            $_SESSION['flash_success'] = "Payment rejected successfully.";
         }
         
         header("Location: " . BASE_URL . "/admin/payments");
@@ -750,6 +644,7 @@ $message = "
 
             if ($id) {
                 $this->model('Payment')->updatePaymentDetails($id, $utr, $payer_upi, $status);
+                $_SESSION['flash_success'] = "Payment details updated successfully.";
             }
         }
         header("Location: " . BASE_URL . "/admin/payments");
@@ -779,11 +674,25 @@ $message = "
         Auth::role(['admin']);
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $global_upi = $_POST['global_upi'] ?? null;
+            $reminder_times = $_POST['reminder_times'] ?? null; // From dashboard modal
+            
+            $planModel = $this->model('Plan');
+
             if ($global_upi) {
-                $this->model('Plan')->updateSetting('global_upi', $global_upi);
+                $planModel->updateSetting('global_upi', $global_upi);
             }
+
+            if ($reminder_times !== null) {
+                // Handle array from modal
+                $times = array_filter($reminder_times, function($v) { return !empty($v); });
+                $times = array_unique($times);
+                sort($times); // Sort ascending
+                $planModel->updateSetting('cron_reminder_times', json_encode(array_values($times)));
+            }
+            $_SESSION['flash_success'] = "Settings updated successfully!";
         }
-        header("Location: " . BASE_URL . "/admin/plans");
+        $redirect = $_SERVER['HTTP_REFERER'] ?? BASE_URL . "/admin/plans";
+        header("Location: " . $redirect);
         exit;
     }
 
@@ -805,8 +714,10 @@ $message = "
             $planModel = $this->model('Plan');
             if ($id) {
                 $planModel->updateMasterFull($id, $data);
+                $_SESSION['flash_success'] = "Plan updated successfully!";
             } else {
                 $planModel->addMasterPlan($data);
+                $_SESSION['flash_success'] = "Plan added successfully!";
             }
         }
         header("Location: " . BASE_URL . "/admin/plans");
@@ -817,6 +728,7 @@ $message = "
     {
         Auth::role(['admin']);
         $this->model('Plan')->deleteMasterPlan($id);
+        $_SESSION['flash_success'] = "Plan deleted successfully!";
         header("Location: " . BASE_URL . "/admin/plans");
         exit;
     }
@@ -839,6 +751,7 @@ $message = "
 
             $this->model('Plan')->createPlan($data);
 
+            $_SESSION['flash_success'] = "Plan assigned successfully!";
             header("Location: " . BASE_URL . "/admin/users");
             exit;
         }
@@ -1038,6 +951,7 @@ public function attendanceCalendar($userId)
             $eventModel = $this->model('Event');
             $eventModel->create($data);
             
+            $_SESSION['flash_success'] = "Event created successfully!";
             header('Location: ' . BASE_URL . '/admin/events');
             exit;
         }
@@ -1060,6 +974,7 @@ public function attendanceCalendar($userId)
             
             $eventModel->update($id, $data);
             
+            $_SESSION['flash_success'] = "Event updated successfully!";
             header('Location: ' . BASE_URL . '/admin/events');
             exit;
         }
@@ -1076,6 +991,7 @@ public function attendanceCalendar($userId)
         $eventModel = $this->model('Event');
         $eventModel->toggleStatus($id, $status);
         
+        $_SESSION['flash_success'] = "Event status updated successfully!";
         header('Location: ' . BASE_URL . '/admin/events');
         exit;
     }
@@ -1087,6 +1003,7 @@ public function attendanceCalendar($userId)
         $eventModel = $this->model('Event');
         $eventModel->delete($id);
         
+        $_SESSION['flash_success'] = "Event deleted successfully!";
         header('Location: ' . BASE_URL . '/admin/events');
         exit;
     }

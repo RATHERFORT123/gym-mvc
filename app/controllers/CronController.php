@@ -20,8 +20,30 @@ class CronController extends Controller
         $planModel = $this->model('Plan');
         $notificationsSent = 0;
 
-        // Notify for 3 days and 1 day remaining
-        foreach ([3, 1] as $days) {
+        // Mandatory days: 3, 2, 1
+        $daysList = [3, 2, 1];
+
+        // Time Check Logic (Skip if manual trigger)
+        if (!isset($_GET['manual'])) {
+            $cron_times_json = $planModel->getSetting('cron_reminder_times');
+            $configured_times = json_decode($cron_times_json ?? '', true);
+            
+            // Default to 15:00 if not set
+            if (empty($configured_times) || !is_array($configured_times)) {
+                $configured_times = ['15:00'];
+            }
+
+            $current_time = date('H:i');
+            
+            // Check if current time is in the list
+            if (!in_array($current_time, $configured_times)) {
+                echo "Skipping: Current time ($current_time) does not match scheduled times: " . implode(', ', $configured_times);
+                return;
+            }
+        }
+
+        // Loop through specific configured days
+        foreach ($daysList as $days) {
             $expiring = $planModel->getExpiringSubscriptions($days);
 
             foreach ($expiring as $sub) {

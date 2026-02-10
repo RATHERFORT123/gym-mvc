@@ -60,32 +60,31 @@
         <input type="text" name="payer_upi" class="form-control"
                value="<?= $_GET['payer_upi'] ?? '' ?>">
       </div>
-<div class="col-md-3 col-sm-6">
-    <label class="text-white">Account Holder Name</label>
-    <input type="text"
-           name="account_holder"
-           class="form-control"
-           placeholder="e.g. Chetan"
-           value="<?= $_GET['account_holder'] ?? '' ?>">
-</div>
+      <div class="col-md-3 col-sm-6">
+          <label class="text-white">Account Holder Name</label>
+          <input type="text"
+                name="account_holder"
+                class="form-control"
+                placeholder="e.g. Chetan"
+                value="<?= $_GET['account_holder'] ?? '' ?>">
+      </div>
 
       <!-- Buttons -->
       <div class="col-md-6 d-flex align-items-end gap-2">
         <button class="btn btn-danger fw-bold">Apply</button>
 
         <?php
-$params = $_GET;
-unset($params['url']);
-?>
+          $params = $_GET;
+          unset($params['url']);
+        ?>
 
-<a
-  href="<?= BASE_URL ?>/admin/exportPayments?<?= http_build_query($params) ?>"
-  class="btn btn-success"
-  target="_blank"
->
-  Download Excel
-</a>
-
+        <a
+          href="<?= BASE_URL ?>/admin/exportPayments?<?= http_build_query($params) ?>"
+          class="btn btn-success"
+          target="_blank"
+        >
+          Download Excel
+        </a>
 
         <a href="<?= BASE_URL ?>/admin/payments"
            class="btn btn-secondary">Reset</a>

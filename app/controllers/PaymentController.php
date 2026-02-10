@@ -37,10 +37,29 @@ class PaymentController extends Controller
         // Fetch master plans from DB
         $plans = $planModel->getAllMasterPlans();
 
+        // Fetch global UPI for fallback
+        $global_upi = $planModel->getSetting('global_upi') ?: (defined('UPI_ID') ? UPI_ID : '');
+
         // Fetch user gender to display correct price in view
         $userModel = $this->model('User');
         $userProfile = $userModel->getProfile($_SESSION['user_id']);
         $userGender = $userProfile['gender'] ?? 'Male';
+
+        // Sort plans by price based on user role and gender
+        usort($plans, function($a, $b) use ($userGender) {
+            $role = $_SESSION['role'] ?? 'user';
+            if ($role === 'faculty') {
+                $priceA = $a['price_faculty'];
+                $priceB = $b['price_faculty'];
+            } elseif ($userGender === 'Female') {
+                $priceA = $a['price_female'];
+                $priceB = $b['price_female'];
+            } else {
+                $priceA = $a['price_user'];
+                $priceB = $b['price_user'];
+            }
+            return $priceA <=> $priceB;
+        });
 
         $this->view('subscription/plans', [
             'plans' => $plans,
@@ -48,7 +67,8 @@ class PaymentController extends Controller
             'daysLeft' => $daysLeft,
             'preselect' => $preselect,
             'hasActiveVerifiedSubscription' => $hasActiveVerifiedSubscription,
-            'userGender' => $userGender
+            'userGender' => $userGender,
+            'global_upi' => $global_upi
         ]);
     }
 
@@ -94,10 +114,10 @@ class PaymentController extends Controller
             $price = $planRow['price_user'];
         }
         
-        $global_upi = $planModel->getSetting('global_upi') ?: UPI_ID;
+        $global_upi = $planModel->getSetting('global_upi') ?: (defined('UPI_ID') ? UPI_ID : '');
 
         // Generate UPI link and QR without payment_id (generic transaction note)
-        $upi = $global_upi;
+        $upi = !empty($planRow['upi_id']) ? $planRow['upi_id'] : $global_upi;
         $amount = number_format($price, 2, '.', '');
         $upi_link = "upi://pay?pa={$upi}&pn=" . urlencode('SGSIT Gym') . "&am={$amount}&cu=INR&tn=" . urlencode("GYM-SUBSCRIPTION");
         $phonepe_link = "phonepe://pay?pa={$upi}&pn=" . urlencode('SGSIT Gym') . "&am={$amount}&cu=INR&tn=" . urlencode("GYM-SUBSCRIPTION");
@@ -163,15 +183,15 @@ class PaymentController extends Controller
             $price = $planRow['price_user'];
         }
         
-        $global_upi = $planModel->getSetting('global_upi') ?: UPI_ID;
+        $global_upi = $planModel->getSetting('global_upi') ?: (defined('UPI_ID') ? UPI_ID : '');
 
         $pdo = Database::getInstance();
 
         // Use plans_master id as plan reference for payments
         $plan_id = $planRow['id'];
 
-        // choose upi id for this payment (prioritize global setting)
-        $upi_for_payment = $global_upi;
+        // choose upi id for this payment (Plan specific > Global)
+        $upi_for_payment = !empty($planRow['upi_id']) ? $planRow['upi_id'] : $global_upi;
 
         // 2) create a pending payment (store chosen upi id)
         // Use only plan_id for compatibility
@@ -187,7 +207,7 @@ class PaymentController extends Controller
         $payment_id = $pdo->lastInsertId();
 
         // 3) generate UPI link and QR image (Google Charts)
-        $upi = $global_upi;
+        $upi = $upi_for_payment;
         $amount = number_format($price, 2, '.', '');
         $upi_link = "upi://pay?pa={$upi}&pn=" . urlencode('SGSIT Gym') . "&am={$amount}&cu=INR&tn=" . urlencode("GYM-PAY-" . $payment_id);
         $phonepe_link = "phonepe://pay?pa={$upi}&pn=" . urlencode('SGSIT Gym') . "&am={$amount}&cu=INR&tn=" . urlencode("GYM-PAY-" . $payment_id);
@@ -513,7 +533,8 @@ class PaymentController extends Controller
 
         // Build UPI link (prioritize global setting)
         $planModel = $this->model('Plan');
-        $upi = $planModel->getSetting('global_upi') ?: (!empty($payment['upi_id']) ? $payment['upi_id'] : UPI_ID);
+        $global_upi = $planModel->getSetting('global_upi') ?: (defined('UPI_ID') ? UPI_ID : '');
+        $upi = !empty($payment['upi_id']) ? $payment['upi_id'] : $global_upi;
         $amount = number_format($payment['amount'], 2, '.', '');
         $upi_link = "upi://pay?pa={$upi}&pn=" . urlencode('SGSIT Gym') . "&am={$amount}&cu=INR&tn=" . urlencode('GYM-PAY-' . $payment['id']);
 

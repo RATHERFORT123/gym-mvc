@@ -204,7 +204,7 @@ body{
     <a class="nav-link" href="<?= BASE_URL ?>/home/index">Home</a>
 </li>
 <li class="nav-item">
-    <a class="nav-link" href="<?= BASE_URL ?>/home/about">AboutUs</a>
+    <a class="nav-link" href="<?= BASE_URL ?>/home/about">About Us</a>
 </li>
 
 

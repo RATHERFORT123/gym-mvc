@@ -278,11 +278,10 @@ class Database
                 ['6m','6 Months',899,899,899],
             ];
 
-            foreach ($defaults as $d) {
-                $stmt = self::$pdo->prepare("SELECT COUNT(*) FROM plans_master WHERE plan_key=?");
-                $stmt->execute([$d[0]]);
-
-                if ($stmt->fetchColumn() == 0) {
+            // Only seed if table is empty to allow deletions
+            $stmt = self::$pdo->query("SELECT COUNT(*) FROM plans_master");
+            if ($stmt->fetchColumn() == 0) {
+                foreach ($defaults as $d) {
                     $ins = self::$pdo->prepare(
                         "INSERT INTO plans_master (plan_key,name,price_user,price_faculty,price_female,upi_id)
                          VALUES (?,?,?,?,?,?)"

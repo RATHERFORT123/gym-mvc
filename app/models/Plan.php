@@ -121,13 +121,13 @@ class Plan extends Model
         $stmt = $this->db->prepare(
             "SELECT 
                 us.*, 
-                u.name, 
-                u.email, 
+                u.name,
+                u.email,
                 pm.name AS plan_name
             FROM user_subscriptions us
             JOIN users u ON u.id = us.user_id
             JOIN plans_master pm ON pm.id = us.plan_id
-            WHERE us.end_date = ? 
+            WHERE us.end_date = ?
             AND us.status = 'active'"
         );
         $stmt->execute([$targetDate]);

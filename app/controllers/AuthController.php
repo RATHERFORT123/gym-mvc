@@ -69,6 +69,12 @@ class AuthController extends Controller
                 return;
             }
 
+            // Check if email already exists
+            if ($this->model('User')->findByEmail($_POST['email'] ?? '')) {
+                $this->view('auth/register', ['error' => 'Email already registered. Please login.']);
+                return;
+            }
+
             $data = [
                 'name'     => $_POST['name'] ?? '',
                 'email'    => $_POST['email'] ?? '',
@@ -97,6 +103,13 @@ class AuthController extends Controller
     }
     public function sendOtp()
 {
+    // Check if email already exists
+    $userModel = $this->model('User');
+    if ($userModel->findByEmail($_POST['email'] ?? '')) {
+        $this->view('auth/register', ['error' => 'Email already registered. Please login.']);
+        return;
+    }
+
     $otp = rand(100000, 999999);
 
     $_SESSION['register'] = [
@@ -127,6 +140,7 @@ public function verifyOtp()
         && time() <= $_SESSION['register']['expiry']) {
 
         $userModel = $this->model('User');
+
         $userModel->create([
             'name' => $_SESSION['register']['name'],
             'email' => $_SESSION['register']['email'],
