@@ -207,17 +207,37 @@
         .profile-header { padding: 40px 20px; }
     }
 </style>
+<!-- <pre>
+<?php //print_r($profile); ?>
+</pre> -->
 
 <div class="container profile-wrapper">
     <div class="main-card">
         
         <div class="profile-header">
             <a href="<?= BASE_URL ?>/profile/edit" class="edit-btn-top text-decoration-none">
-                <i class="fas fa-user-edit me-2"></i>Edit Profile
+                <i class="fas fa-user-edit me-2"></i>Edit ProfileS
             </a>
-            
+          
+
             <div class="avatar-container">
-                <?= strtoupper(substr($profile['email'], 0, 1)) ?>
+              <?php if (!empty($profile['profile_photo']) && file_exists(__DIR__ . "/../../../public/uploads/profile/" . $profile['profile_photo'])): ?>
+
+    <img src="<?= BASE_URL ?>/public/uploads/profile/<?= htmlspecialchars($profile['profile_photo']) ?>"
+         class="rounded-circle shadow"
+         style="width:120px;height:120px;object-fit:cover;">
+
+<?php else: ?>
+
+    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+         style="width:120px;height:120px;font-size:2rem;">
+        <?= strtoupper(substr($profile['email'] ?? 'U', 0, 1)) ?>
+    </div>
+
+<?php endif; ?>
+
+
+              
             </div>
 
             <h2 class="profile-name">

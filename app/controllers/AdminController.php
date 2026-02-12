@@ -1,5 +1,7 @@
 <?php
 
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+
 class AdminController extends Controller
 {
     // ==========================
@@ -402,22 +404,25 @@ public function exportPayments()
     $utr           = $_GET['utr'] ?? null;
     $payerUpi      = $_GET['payer_upi'] ?? null;
     $accountHolder = $_GET['account_holder'] ?? null;
-
     $sql = "
-        SELECT 
-            u.name AS member_name,
-            p.amount,
-            p.transaction_date,
-            p.status,
-            p.utr_number,
-            p.payer_upi,
-            p.account_holder_name,
-            us.end_date AS expiry_date
-        FROM payments p
-        JOIN users u ON u.id = p.user_id
-        LEFT JOIN user_subscriptions us ON us.payment_id = p.id
-        WHERE 1=1
-    ";
+    SELECT 
+        u.name AS member_name,
+        up.mobile_number,
+        p.amount,
+        p.transaction_date,
+        p.status,
+        p.utr_number,
+        p.payer_upi,
+        p.account_holder_name,
+        us.end_date AS expiry_date  
+    FROM payments p
+    JOIN users u ON u.id = p.user_id
+    LEFT JOIN user_profiles up ON up.user_id = u.id
+    LEFT JOIN user_subscriptions us ON us.payment_id = p.id
+    WHERE 1=1
+";
+
+ 
 
     $params = [];
 
@@ -470,30 +475,49 @@ public function exportPayments()
 
     // Header row
     $sheet->setCellValue('A1', 'Member Name');
-    $sheet->setCellValue('B1', 'Amount');
-    $sheet->setCellValue('C1', 'Payment Date');
-    $sheet->setCellValue('D1', 'Expiry Date');
-    $sheet->setCellValue('E1', 'Status');
-    $sheet->setCellValue('F1', 'UTR');
-    $sheet->setCellValue('G1', 'Payer UPI');
-    $sheet->setCellValue('H1', 'Account Holder');
-
+    $sheet->setCellValue('C1', 'Amount');
+    $sheet->setCellValue('B1', 'Mobile Number');
+    $sheet->setCellValue('D1', 'Payment Date');
+    $sheet->setCellValue('E1', 'Expiry Date');
+    $sheet->setCellValue('F1', 'Status');
+    $sheet->setCellValue('G1', 'UTR');
+    $sheet->setCellValue('H1', 'Payer UPI');
+    $sheet->setCellValue('I1', 'Account Holder');
+    
     // Data rows
+
     $row = 2;
     foreach ($rows as $r) {
-        $sheet->setCellValue('A' . $row, $r['member_name']);
-        $sheet->setCellValue('B' . $row, $r['amount']);
-        $sheet->setCellValue('C' . $row, $r['transaction_date']);
-        $sheet->setCellValue('D' . $row, $r['expiry_date']);
-        $sheet->setCellValue('E' . $row, ucfirst($r['status']));
-        $sheet->setCellValue('F' . $row, $r['utr_number']);
-        $sheet->setCellValue('G' . $row, $r['payer_upi']);
-        $sheet->setCellValue('H' . $row, $r['account_holder_name']);
-        $row++;
-    }
+
+    $sheet->setCellValue('A' . $row, $r['member_name']);
+
+    $sheet->setCellValueExplicit(
+        'B' . $row,
+        $r['mobile_number'] ?? '',
+        DataType::TYPE_STRING
+    );
+
+    $sheet->setCellValue('C' . $row, $r['amount']);
+    $sheet->setCellValue('D' . $row, $r['transaction_date']);
+    $sheet->setCellValue('E' . $row, $r['expiry_date']);
+    $sheet->setCellValue('F' . $row, ucfirst($r['status']));
+
+    $sheet->setCellValueExplicit(
+        'G' . $row,
+        $r['utr_number'] ?? '',
+        DataType::TYPE_STRING
+    );
+
+    $sheet->setCellValue('H' . $row, $r['payer_upi']);
+    $sheet->setCellValue('I' . $row, $r['account_holder_name']);
+
+    $row++;
+}
+
 
     // Auto-size columns
-    foreach (range('A', 'H') as $col) {
+    foreach (range('A', 'I') as $col)
+ {
         $sheet->getColumnDimension($col)->setAutoSize(true);
     }
 

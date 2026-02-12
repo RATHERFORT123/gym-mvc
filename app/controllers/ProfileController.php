@@ -4,6 +4,8 @@ class ProfileController extends Controller
 {
     public function index()
     {
+     
+
         Auth::role(['user', 'faculty']);
 
         $userModel = $this->model('User');
@@ -111,7 +113,101 @@ class ProfileController extends Controller
                 $errors['mobile_number'] = "Mobile Number must be exactly 10 digits.";
             }
 
+
             $role = $_SESSION['role'];
+/// =====================
+// PROFILE PHOTO UPLOAD
+// =====================
+$photoName = null;
+
+$userModel = $this->model('User');
+$currentUser = $userModel->getById($_SESSION['user_id']);
+$oldPhoto = $currentUser['profile_photo'] ?? null;
+// var_dump($_SESSION['user_id']);
+// var_dump($currentUser);
+// exit;
+
+if (!empty($_FILES['profile_photo']['name'])) {
+
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+
+    $fileInfo = finfo_open(FILEINFO_MIME_TYPE);
+    $fileType = finfo_file($fileInfo, $_FILES['profile_photo']['tmp_name']);
+
+    if (!in_array($fileType, $allowedTypes)) {
+        $errors['profile_photo'] = "Only JPG, JPEG, PNG allowed.";
+    } 
+    elseif ($_FILES['profile_photo']['size'] > 2 * 1024 * 1024) {
+        $errors['profile_photo'] = "Image must be under 2MB.";
+    } 
+    else {
+
+        $uploadDir = dirname(__DIR__, 2) . "/public/uploads/profile/";
+
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0775, true);
+        }
+
+        $photoName = "user_" . $_SESSION['user_id'] . "_" . time() . ".jpg";
+        $uploadPath = $uploadDir . $photoName;
+
+        // Create source
+        if ($fileType == 'image/jpeg') {
+            $src = imagecreatefromjpeg($_FILES['profile_photo']['tmp_name']);
+        } else {
+            $src = imagecreatefrompng($_FILES['profile_photo']['tmp_name']);
+        }
+
+        if ($src) {
+
+            $width = imagesx($src);
+$height = imagesy($src);
+$size = min($width, $height);
+
+$dst = imagecreatetruecolor(300, 300);
+
+$srcX = (int)(($width - $size) / 2);
+$srcY = (int)(($height - $size) / 2);
+
+imagecopyresampled(
+    $dst, $src,
+    0, 0,
+    $srcX,
+    $srcY,
+    300, 300,
+    $size, $size
+);
+
+
+            // ✅ Save and check success
+            if (imagejpeg($dst, $uploadPath, 90)) {
+// var_dump($oldPhoto);
+// exit;
+
+// ✅ Delete old photo ONLY after success
+if (!empty($oldPhoto)) {
+    $oldPhotoPath = $uploadDir . $oldPhoto;
+    // var_dump($oldPhotoPath);
+    // var_dump(file_exists($oldPhotoPath));
+    // exit;
+                    if (is_file($oldPhotoPath)) {
+                        unlink($oldPhotoPath);
+                    }
+                }
+
+                $updateData['profile_photo'] = $photoName;
+            } else {
+                $errors['profile_photo'] = "Failed to save image. Check folder permission.";
+            }
+
+            imagedestroy($src);
+            imagedestroy($dst);
+        } else {
+            $errors['profile_photo'] = "Invalid image file.";
+        }
+    }
+}
+
 
             // ==========================
             // FACULTY PROFILE DATA
@@ -143,7 +239,9 @@ class ProfileController extends Controller
                         $bmiIndex = number_format($bmiIndex, 2);
                     }
                 }
-
+// if (!empty($photoName)) {
+//     $updateData['profile_photo'] = $photoName;
+// }
                 $updateData = [
                     'first_name' => $_POST['first_name'] ?? '',
                     'last_name' => $_POST['last_name'] ?? '',
@@ -162,6 +260,10 @@ class ProfileController extends Controller
                     'waist_size' => $_POST['waist_size'] ?? '',
                     'employee_code' => $_POST['employee_code'] ?? ''
                 ];
+                if (!empty($photoName)) {
+    $updateData['profile_photo'] = $photoName;
+}
+
             }
             // ==========================
             // USER / STUDENT PROFILE DATA
@@ -193,6 +295,9 @@ class ProfileController extends Controller
                         $bmiIndex = number_format($bmiIndex, 2);
                     }
                 }
+if (!empty($photoName)) {
+    $updateData['profile_photo'] = $photoName;
+}
 
                 $updateData = [
                     'first_name' => $_POST['first_name'] ?? '',
@@ -212,7 +317,13 @@ class ProfileController extends Controller
                     'bmi_index' => $bmiIndex,
                     'waist_size' => $_POST['waist_size'] ?? ''
                 ];
+                if (!empty($photoName)) {
+    $updateData['profile_photo'] = $photoName;
+}
+
             }
+// var_dump($updateData);
+// exit;
 
             // If there are validation errors, reload view with data and errors
             if (!empty($errors)) {

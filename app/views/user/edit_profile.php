@@ -167,17 +167,88 @@
         .form-group-section { padding: 25px 20px; }
         .header-banner { padding: 30px 20px; }
     }
+    .profile-photo-wrapper {
+    position: relative;
+    width: 140px;
+    height: 140px;
+}
+
+.profile-photo-img,
+.profile-photo-placeholder {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--bhagua);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.profile-photo-placeholder {
+    background: #2c3e50;
+    color: white;
+    font-size: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.photo-edit-icon {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background: var(--bhagua);
+    color: white;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.photo-edit-icon:hover {
+    background: var(--bhagua-dark);
+    transform: scale(1.1);
+}
+
 </style>
 
-<div class="container edit-profile-wrapper">
-    <div class="premium-card">
-        
+<div class="mb-4 text-center">
+    <form method="post" action="<?= BASE_URL ?>/profile/update" enctype="multipart/form-data">
+    
+    <label class="form-label d-block mb-3">Profile Photo</label>
+
+    <div class="profile-photo-wrapper mx-auto">
+        <?php if (!empty($profile['profile_photo'])): ?>
+            <img id="photoPreview"
+                 src="<?= BASE_URL ?>/public/uploads/profile/<?= htmlspecialchars($profile['profile_photo']) ?>"
+                 class="profile-photo-img">
+        <?php else: ?>
+            <div id="photoPreview" class="profile-photo-placeholder">
+                <?= strtoupper(substr($profile['email'] ?? 'U', 0, 1)) ?>
+            </div>
+        <?php endif; ?>
+
+        <label for="profile_photo" class="photo-edit-icon">
+            <i class="fas fa-camera"></i>
+        </label>
+
+        <input type="file" name="profile_photo" id="profile_photo"
+               accept="image/png,image/jpeg,image/jpg" hidden>
+    </div>
+
+</div>
+
+
         <div class="header-banner">
             <h2><i class="fas fa-user-circle me-2"></i>Edit Profile</h2>
             <p>Update your personal, academic, and fitness metrics</p>
         </div>
 
-        <form method="post" action="<?= BASE_URL ?>/profile/update">
+        <!-- <form method="post" action="<?= BASE_URL ?>/profile/update"> -->
             
             <div class="form-group-section">
                 <div class="section-headline">
@@ -328,5 +399,28 @@
         </form>
     </div>
 </div>
+<script>
+document.getElementById('profile_photo').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const preview = document.getElementById('photoPreview');
+
+        if (preview.tagName === "DIV") {
+            const img = document.createElement("img");
+            img.id = "photoPreview";
+            img.className = "profile-photo-img";
+            img.src = event.target.result;
+            preview.replaceWith(img);
+        } else {
+            preview.src = event.target.result;
+        }
+    };
+
+    reader.readAsDataURL(file);
+});
+</script>
 
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

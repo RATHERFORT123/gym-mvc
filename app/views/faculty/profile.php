@@ -7,13 +7,13 @@
     :root {
         --bhagua: #FF9933;
         --bhagua-dark: #E67E22;
-        --bhagua-light: rgba(255, 153, 51, 0.1);
-        --dark-surface: #1e272e;
-        --glass-bg: rgba(255, 255, 255, 0.95);
+        --bhagua-light: rgb(255, 255, 255);
+        --dark-surface: #ffffff;
+        --glass-bg: rgb(255, 255, 255);
     }
 
     body {
-        background-color: #f8f9fa;
+        background-color: #ffffff;
         font-family: 'Inter', sans-serif;
     }
 
@@ -32,7 +32,7 @@
         border: none;
         border-radius: 24px;
         overflow: hidden;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        box-shadow: 0 20px 40px rgb(226, 216, 216);
         background: white;
     }
 
@@ -42,16 +42,16 @@
         padding: 50px 30px;
         text-align: center;
         position: relative;
-        color: white;
+        color: black;
     }
 
     .edit-btn-top {
         position: absolute;
         top: 20px;
         right: 20px;
-        background: rgba(255,255,255,0.1);
+        background: rgb(19, 19, 19);
         backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.2);
+        border: 1px solid rgb(20, 17, 17);
         color: white;
         padding: 8px 18px;
         border-radius: 12px;
@@ -69,7 +69,7 @@
         width: 120px;
         height: 120px;
         background: var(--bhagua);
-        border: 5px solid rgba(255,255,255,0.1);
+        border: 5px solid rgb(255, 255, 255);
         font-size: 3rem;
         font-weight: 800;
         margin: 0 auto 15px;
@@ -94,8 +94,8 @@
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
         gap: 15px;
         padding: 25px 40px;
-        background: #fdfdfd;
-        border-bottom: 1px solid #f1f1f1;
+        background: #9c9c9c;
+        border-bottom: 1px solid #3b3b3b;
     }
 
     .bio-box {
@@ -124,7 +124,7 @@
     .bio-value {
         font-size: 1.1rem;
         font-weight: 800;
-        color: var(--dark-surface);
+        color: black;
     }
 
     /* Detail Sections */
@@ -184,9 +184,21 @@
             <a href="<?= BASE_URL ?>/profile/edit" class="edit-btn-top text-decoration-none">
                 <i class="fas fa-edit me-2"></i>Edit
             </a>
-            <div class="avatar-wrapper">
-                <?= strtoupper(substr($profile['email'], 0, 1)) ?>
-            </div>
+            <div class="avatar-container">
+              <?php if (!empty($profile['profile_photo']) && file_exists(__DIR__ . "/../../../public/uploads/profile/" . $profile['profile_photo'])): ?>
+
+    <img src="<?= BASE_URL ?>/public/uploads/profile/<?= htmlspecialchars($profile['profile_photo']) ?>"
+         class="rounded-circle shadow"
+         style="width:120px;height:120px;object-fit:cover;">
+
+<?php else: ?>
+
+    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+         style="width:120px;height:120px;font-size:2rem;">
+        <?= strtoupper(substr($profile['email'] ?? 'U', 0, 1)) ?>
+    </div>
+
+<?php endif; ?>
             <h2 class="profile-name">
                 <?= htmlspecialchars(($profile['first_name'] ?? '') . ' ' . ($profile['middle_name'] ? $profile['middle_name'] . ' ' : '') . ($profile['last_name'] ?? '')) ?>
             </h2>
@@ -253,19 +265,15 @@
             </div>
             <div class="pro-details-card">
                 <div class="row">
-                    <div class="col-md-3 mb-3 mb-md-0 text-center text-md-start">
-                        <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Employee Code</small>
-                        <span class="fw-bold"><?= htmlspecialchars($profile['employee_code'] ?? '-') ?></span>
-                    </div>
-                    <div class="col-md-3 mb-3 mb-md-0 text-center text-md-start">
+                    <div class="col-md-4 mb-3 mb-md-0 text-center text-md-start">
                         <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Department</small>
                         <span class="fw-bold"><?= htmlspecialchars($profile['department'] ?? '-') ?></span>
                     </div>
-                    <div class="col-md-3 mb-3 mb-md-0 text-center text-md-start">
+                    <div class="col-md-4 mb-3 mb-md-0 text-center text-md-start">
                         <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Current Position</small>
                         <span class="fw-bold"><?= htmlspecialchars($profile['position'] ?? '-') ?></span>
                     </div>
-                    <div class="col-md-3 text-center text-md-start">
+                    <div class="col-md-4 text-center text-md-start">
                         <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Expertise</small>
                         <span class="fw-bold"><?= htmlspecialchars($profile['subject_expert'] ?? '-') ?></span>
                     </div>

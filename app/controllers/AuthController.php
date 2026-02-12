@@ -140,14 +140,17 @@ public function verifyOtp()
         && time() <= $_SESSION['register']['expiry']) {
 
         $userModel = $this->model('User');
+$userLoginId = $userModel->generateLoginId();
 
-        $userModel->create([
-            'name' => $_SESSION['register']['name'],
-            'email' => $_SESSION['register']['email'],
-            'password' => $_SESSION['register']['password'],
-            'role' => $_SESSION['register']['role'],
-            'is_verified' => 1
-        ]);
+$userModel->create([
+    'name' => $_SESSION['register']['name'],
+    'email' => $_SESSION['register']['email'],
+    'password' => $_SESSION['register']['password'],
+    'role' => $_SESSION['register']['role'],
+    'is_verified' => 1,
+    'user_login_id' => $userLoginId
+]);
+
 
         // Auto-login
         $newUser = $userModel->findByEmail($_SESSION['register']['email']);
