@@ -264,6 +264,16 @@ class Database
                 self::$pdo->exec("ALTER TABLE users ADD COLUMN is_profile_complete BOOLEAN DEFAULT 0 AFTER is_active");
             } catch (Exception $e) { /* Column might already exist */ }
 
+            // Add profile pic to users
+            try {
+                self::$pdo->exec("ALTER TABLE users ADD COLUMN profile_photo VARCHAR(255) DEFAULT NULL AFTER role");
+            } catch (Exception $e) { /* Column might already exist */ }
+
+            // Add user login id to users
+            try {
+                self::$pdo->exec("ALTER TABLE users ADD COLUMN user_login_id VARCHAR(255) DEFAULT NULL AFTER id");
+            } catch (Exception $e) { /* Column might already exist */ }
+
             // Auto-update existing users who have profile data
             try {
                 self::$pdo->exec("UPDATE users u JOIN user_profiles up ON u.id = up.user_id SET u.is_profile_complete = 1");

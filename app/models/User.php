@@ -41,6 +41,7 @@ public function getProfile($userId)
         SELECT 
             u.email,
             u.profile_photo,
+            u.user_login_id,
             p.*
         FROM users u 
         LEFT JOIN user_profiles p ON u.id = p.user_id 

@@ -248,9 +248,9 @@
             <p>Your recent payment transaction was declined by the administrator.</p>
             <hr>
             <p class="mb-0"><strong>Reason:</strong> <?= htmlspecialchars($declinedReason ?? 'Verification Failed') ?></p>
-            <div class="mt-3">
-                <a href="<?= BASE_URL ?>/payment/index" class="btn btn-danger btn-sm">Try Again / View Plans</a>
-            </div>
+            <!-- <div class="mt-3">
+                <a href="<?= BASE_URL ?>/payment/index" class="btn btn-danger btn-sm">View Plans</a>
+            </div> -->
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <?php endif; ?>

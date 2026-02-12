@@ -366,7 +366,7 @@
                         <?php if (isset($errors['weight'])): ?><div class="invalid-feedback"><?= $errors['weight'] ?></div><?php endif; ?>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Waist (cm)</label>
+                        <label class="form-label">Waist (inch)</label>
                         <input type="number" step="0.01" name="waist_size" class="form-control <?= isset($errors['waist_size']) ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars($profile['waist_size'] ?? '') ?>" required>
                         <?php if (isset($errors['waist_size'])): ?><div class="invalid-feedback"><?= $errors['waist_size'] ?></div><?php endif; ?>
                     </div>

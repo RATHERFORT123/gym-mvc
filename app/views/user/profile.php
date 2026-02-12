@@ -216,34 +216,38 @@
         
         <div class="profile-header">
             <a href="<?= BASE_URL ?>/profile/edit" class="edit-btn-top text-decoration-none">
-                <i class="fas fa-user-edit me-2"></i>Edit ProfileS
+                <i class="fas fa-user-edit me-2"></i>Edit Profile
             </a>
-          
 
             <div class="avatar-container">
-              <?php if (!empty($profile['profile_photo']) && file_exists(__DIR__ . "/../../../public/uploads/profile/" . $profile['profile_photo'])): ?>
+                <?php if (!empty($profile['profile_photo']) && file_exists(__DIR__ . "/../../../public/uploads/profile/" . $profile['profile_photo'])): ?>
 
-    <img src="<?= BASE_URL ?>/public/uploads/profile/<?= htmlspecialchars($profile['profile_photo']) ?>"
-         class="rounded-circle shadow"
-         style="width:120px;height:120px;object-fit:cover;">
+                <img src="<?= BASE_URL ?>/public/uploads/profile/<?= htmlspecialchars($profile['profile_photo']) ?>"
+                    class="rounded-circle shadow"
+                    style="width:120px;height:120px;object-fit:cover;">
 
-<?php else: ?>
+                <?php else: ?>
 
-    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
-         style="width:120px;height:120px;font-size:2rem;">
-        <?= strtoupper(substr($profile['email'] ?? 'U', 0, 1)) ?>
-    </div>
+                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+                        style="width:120px;height:120px;font-size:2rem;">
+                        <?= strtoupper(substr($profile['email'] ?? 'U', 0, 1)) ?>
+                    </div>
 
-<?php endif; ?>
+                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+                        style="width:120px;height:120px;font-size:2rem;">
+                        <?= strtoupper(substr($profile['email'] ?? 'U', 0, 1)) ?>
+                    </div>
 
-
-              
+                <?php endif; ?>
             </div>
 
             <h2 class="profile-name">
                 <?= htmlspecialchars(($profile['first_name'] ?? '') . ' ' . ($profile['middle_name'] ? $profile['middle_name'] . ' ' : '') . ($profile['last_name'] ?? 'Guest')) ?>
             </h2>
             <p class="opacity-75 mb-0"><?= htmlspecialchars($profile['email']) ?></p>
+            <?php if (!empty($profile['user_login_id'])): ?>
+                <p class="opacity-75 mb-0"><?= htmlspecialchars($profile['user_login_id']) ?? '' ?></p>
+            <?php endif; ?>
 
             <div class="status-badges">
                 <span class="badge bg-white text-dark px-3 py-2 rounded-pill shadow-sm">
@@ -271,7 +275,7 @@
             <div class="metric-tile">
                 <div class="metric-icon"><i class="fas fa-compress-alt"></i></div>
                 <span class="metric-label">Waist</span>
-                <span class="metric-value"><?= htmlspecialchars($profile['waist_size'] ?? '-') ?> <small>cm</small></span>
+                <span class="metric-value"><?= htmlspecialchars($profile['waist_size'] ?? '-') ?> <small>inch</small></span>
             </div>
             <div class="metric-tile">
                 <div class="metric-icon"><i class="fas fa-heartbeat"></i></div>
@@ -286,8 +290,6 @@
                 </div>
             </div>
         </div>
-
-        
 
         <div class="details-section">
             <div class="row">

@@ -38,7 +38,7 @@
 
     /* Top Profile Header */
     .profile-header {
-        background: linear-gradient(135deg, var(--dark-surface) 0%, #2d3436 100%);
+        background: white;
         padding: 50px 30px;
         text-align: center;
         position: relative;
@@ -160,7 +160,7 @@
     }
 
     .info-value {
-        color: var(--dark-surface);
+        color: black;
         font-weight: 700;
     }
 
@@ -179,33 +179,28 @@
 
 <div class="container profile-wrapper">
     <div class="main-card">
-        
         <div class="profile-header">
             <a href="<?= BASE_URL ?>/profile/edit" class="edit-btn-top text-decoration-none">
                 <i class="fas fa-edit me-2"></i>Edit
             </a>
             <div class="avatar-container">
               <?php if (!empty($profile['profile_photo']) && file_exists(__DIR__ . "/../../../public/uploads/profile/" . $profile['profile_photo'])): ?>
-
-    <img src="<?= BASE_URL ?>/public/uploads/profile/<?= htmlspecialchars($profile['profile_photo']) ?>"
-         class="rounded-circle shadow"
-         style="width:120px;height:120px;object-fit:cover;">
-
-<?php else: ?>
-
-    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
-         style="width:120px;height:120px;font-size:2rem;">
-        <?= strtoupper(substr($profile['email'] ?? 'U', 0, 1)) ?>
-    </div>
-
-<?php endif; ?>
+                <img src="<?= BASE_URL ?>/public/uploads/profile/<?= htmlspecialchars($profile['profile_photo']) ?>"
+                    class="rounded-circle shadow"
+                    style="width:120px;height:120px;object-fit:cover;">
+                <?php else: ?>
+                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+                        style="width:120px;height:120px;font-size:2rem;">
+                        <?= strtoupper(substr($profile['email'] ?? 'U', 0, 1)) ?>
+                    </div>
+            <?php endif; ?>
             <h2 class="profile-name">
                 <?= htmlspecialchars(($profile['first_name'] ?? '') . ' ' . ($profile['middle_name'] ? $profile['middle_name'] . ' ' : '') . ($profile['last_name'] ?? '')) ?>
             </h2>
             <p class="opacity-75 mb-3"><?= htmlspecialchars($profile['email']) ?></p>
-            
+
             <?php if(!empty($profile['blood_group'])): ?>
-                <span class="badge bg-danger px-3 py-2 rounded-pill">
+                <span class="badge bg-danger px-3 py-2 rounded-pill mb-2">
                     <i class="fas fa-tint me-1"></i> Blood Group: <?= htmlspecialchars($profile['blood_group']) ?>
                 </span>
             <?php endif; ?>

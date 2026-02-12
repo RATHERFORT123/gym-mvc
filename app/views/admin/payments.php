@@ -103,7 +103,7 @@
                         <tr>
                             <th>Date</th>
                             <th>Expiry Date</th>
-
+                            <th>User Login Id</th>
                             <th>User</th>
                             <th>Mobile number</th>
                             <th>Plan</th>
@@ -126,16 +126,23 @@
                                     <?= !empty($p['expiry_date'])
                                           ? date('d M Y', strtotime($p['expiry_date']))
                                           : '—' ?>
-                                  </td>
+                                    </td>
                                     <td>
-                                        <?= htmlspecialchars($p['user_name']) ?><br>
+                                        <?= !empty($p['user_login_id'])
+                                          ? htmlspecialchars($p['user_login_id'])
+                                          : 'N/A' ?>
+                                    </td>
+                                    <td>
+                                        <a href="/gym-mvc/admin/assignPlan/<?= urlencode($p['user_id']) ?>">
+                                          <?= htmlspecialchars($p['user_name']) ?>
+                                        </a><br>
                                         <small class="text-white"><?= htmlspecialchars($p['user_email']) ?></small>
                                     </td>
                                     <td>
-                                        <?= $p['mobile_number'] ?? 'N/A' ?>
+                                      <?= $p['mobile_number'] ?? 'N/A' ?>
                                     </td>
                                     <td><?= htmlspecialchars($p['plan_name']) ?></td>
-                                    <td class="fw-bold text-success">₹<?= number_format($p['amount'], 2) ?></td>
+                                      <td class="fw-bold text-success">₹<?= number_format($p['amount'], 2) ?></td>
                                     <td>
                                         <span class="text-info"><?= htmlspecialchars($p['payer_upi'] ?: '-') ?></span>
                                     </td>

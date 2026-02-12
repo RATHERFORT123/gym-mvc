@@ -313,7 +313,7 @@
                                value="<?= $profile['weight_kg'] ?? '' ?>" placeholder="e.g. 70">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Waist (cm)</label>
+                        <label class="form-label">Waist (inch)</label>
                         <input type="number" step="0.01" name="waist_size" class="form-control" 
                                value="<?= $profile['waist_size'] ?? '' ?>" placeholder="Optional">
                     </div>

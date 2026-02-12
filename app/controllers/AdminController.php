@@ -251,8 +251,10 @@ public function payments()
     $sql = "
         SELECT 
             p.*,
+            u.id AS user_id,
             u.name AS user_name,
             u.email AS user_email,
+            u.user_login_id AS user_login_id,
             pm.name AS plan_name,
             us.end_date AS expiry_date
         FROM payments p

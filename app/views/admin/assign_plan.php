@@ -34,20 +34,28 @@ $role = $_SESSION['role'] ?? 'admin';
         </div>
 
         <div class="card-body">
-
             <!-- Avatar -->
             <div class="text-center mb-4">
-                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto mb-2"
-                     style="width:70px;height:70px;font-size:1.8rem;">
-                    <?= strtoupper(substr($data['email'] ?? 'U', 0, 1)) ?>
-                </div>
-
+                <?php if (!empty($data['profile_photo'])): ?>
+                    <img src="<?= BASE_URL ?>/public/uploads/profile/<?= htmlspecialchars($data['profile_photo']) ?>"
+                        class="rounded-circle shadow"
+                        style="width:70px;height:70px;object-fit:cover;">
+                <?php else: ?>
+                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto mb-2"
+                        style="width:70px;height:70px;font-size:1.8rem;">
+                        <?= strtoupper(substr($data['email'] ?? 'U', 0, 1)) ?>
+                    </div>
+                <?php endif; ?>
                 <h5 class="mb-0">
                     <?= $data['first_name'] ?? 'User' ?>
                     <?= $data['middle_name'] ?? '' ?>
                     <?= $data['last_name'] ?? '' ?>
                 </h5>
-
+                <?php if(!empty($data['user_login_id'])): ?>
+                    <span class="px-3 py-2">
+                        <?= htmlspecialchars($data['user_login_id']) ?>
+                    </span>
+                <?php endif; ?> <br/>
                 <small class="text-muted"><?= $data['email'] ?? '-' ?></small>
             </div>
 

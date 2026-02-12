@@ -565,9 +565,4 @@
     })();
 </script>
 
-<?php include __DIR__ . '/../layouts/footer.php'; ?>are hidden
-        showAll();
-    })();
-</script>
-
 <?php include __DIR__ . '/../layouts/footer.php'; ?>
