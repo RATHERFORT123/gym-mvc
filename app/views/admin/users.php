@@ -43,7 +43,6 @@
                     <thead class="table-dark">
                         <tr>
                             <th>Name</th>
-                            <th>Role</th>
                             <th>Fitness Goal</th>
                             <th>BMI Stats</th>
                             <th>Status</th>
@@ -62,7 +61,6 @@
                                         <strong><?= htmlspecialchars($user['name']) ?></strong><br>
                                         <small class="text-muted"><?= htmlspecialchars($user['email']) ?></small>
                                     </td>
-                                    <td><span class="badge bg-secondary"><?= ucfirst($user['role']) ?></span></td>
                                     <td>
                                         <?php if($user['fitness_goal']): ?>
                                             <span class="badge bg-info text-dark"><?= $user['fitness_goal'] ?></span>
@@ -89,92 +87,49 @@
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
-                                            <a href="<?= BASE_URL ?>/admin/assignPlan/<?= $user['id'] ?>" class="btn btn-primary" title="Assign Plan">
-                                                📋 Plan
+                                            <a href="<?= BASE_URL ?>/admin/assignPlan/<?= $user['id'] ?>" class="btn btn-primary btn-sm mb-3" title="Assign Plan">
+                                                <i class="fas fa-clipboard-list"></i> Plan
                                             </a>
-                                            
+                                            <!-- <a href="<?= BASE_URL ?>/admin/attendance/<?= $user['id'] ?>"
+                                                class="btn btn-info btn-sm mb-3"
+                                                title="View Attendance">
+                                                    <i class="fas fa-calendar-check"></i> Attendance
+                                                </a> -->
+                                                <a href="<?= BASE_URL ?>/admin/attendanceCalendar/<?= $user['id'] ?>"
+                                                class="btn btn-info btn-sm mb-3">
+                                                    <i class="fas fa-calendar-alt"></i> View
+                                                </a>                                            
                                             <?php if ($user['is_active']): ?>
-                                                <a href="<?= BASE_URL ?>/admin/toggleStatus/<?= $user['id'] ?>?status=0" class="btn btn-warning" onclick="return confirm('Deactivate this user?')">
-                                                    🚫 Block
-                                                </a>
+                                                <button class="btn btn-warning btn-sm mb-3 confirm-action-btn" 
+                                                        data-action="block"
+                                                        data-url="<?= BASE_URL ?>/admin/toggleStatus/<?= $user['id'] ?>?status=0"
+                                                        data-title="Block User"
+                                                        data-message="Are you sure you want to deactivate '<?= htmlspecialchars($user['name']) ?>'?"
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#confirmActionModal">
+                                                    <i class="fas fa-ban"></i> Block
+                                                </button>
                                             <?php else: ?>
-                                                <a href="<?= BASE_URL ?>/admin/toggleStatus/<?= $user['id'] ?>?status=1" class="btn btn-success">
-                                                    ✅ Activate
+                                                <a href="<?= BASE_URL ?>/admin/toggleStatus/<?= $user['id'] ?>?status=1" class="btn btn-success btn-sm mb-3">
+                                                    <i class="fas fa-check-circle"></i> Activate
                                                 </a>
                                             <?php endif; ?>
-    
-                                            <a href="<?= BASE_URL ?>/admin/deleteUser/<?= $user['id'] ?>" class="btn btn-danger" onclick="return confirm('Are you sure?')">
-                                                🗑️
-                                            </a>
+
+                                            <button class="btn btn-danger btn-sm mb-3 confirm-action-btn" 
+                                                    data-action="delete"
+                                                    data-url="<?= BASE_URL ?>/admin/deleteUser/<?= $user['id'] ?>"
+                                                    data-title="Delete User"
+                                                    data-message="Are you sure you want to permanently delete '<?= htmlspecialchars($user['name']) ?>'? This action cannot be undone."
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#confirmActionModal">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                        <?php foreach ($users as $user): ?>
-                            <tr>
-                                <td>
-                                    <strong><?= htmlspecialchars($user['name']) ?></strong><br>
-                                    <small class="text-muted"><?= htmlspecialchars($user['email']) ?></small>
-                                </td>
-                                <td><span class="badge bg-secondary"><?= ucfirst($user['role']) ?></span></td>
-                                <td>
-                                    <?php if($user['fitness_goal']): ?>
-                                        <span class="badge bg-info text-dark"><?= $user['fitness_goal'] ?></span>
-                                    <?php else: ?>
-                                        <span class="text-muted small">Not set</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php if($user['weight_kg'] && $user['height_cm']): ?>
-                                        <small>
-                                            H: <?= $user['height_cm'] ?>cm<br>
-                                            W: <?= $user['weight_kg'] ?>kg
-                                        </small>
-                                    <?php else: ?>
-                                        -
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php if ($user['is_active']): ?>
-                                        <span class="badge bg-success">Active</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-danger">Inactive</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="<?= BASE_URL ?>/admin/assignPlan/<?= $user['id'] ?>" class="btn btn-primary btn-sm mb-3" title="Assign Plan">
-                                            📋 Plan
-                                        </a>
-                                        <!-- <a href="<?= BASE_URL ?>/admin/attendance/<?= $user['id'] ?>"
-   class="btn btn-info btn-sm mb-3"
-   title="View Attendance">
-    🗓️ Attendance
-</a> -->
-<a href="<?= BASE_URL ?>/admin/attendanceCalendar/<?= $user['id'] ?>"
-   class="btn btn-info btn-sm mb-3">
-    📅 View
-</a>
-
-                                        
-                                        <?php if ($user['is_active']): ?>
-                                            <a href="<?= BASE_URL ?>/admin/toggleStatus/<?= $user['id'] ?>?status=0" class="btn btn-warning btn-sm mb-3" onclick="return confirm('Deactivate this user?')">
-                                                🚫 Block
-                                            </a>
-                                        <?php else: ?>
-                                            <a href="<?= BASE_URL ?>/admin/toggleStatus/<?= $user['id'] ?>?status=1" class="btn btn-success btn-sm mb-3">
-                                                ✅ Activate
-                                            </a>
-                                        <?php endif; ?>
-
-                                        <a href="<?= BASE_URL ?>/admin/deleteUser/<?= $user['id'] ?>" class="btn btn-danger btn-sm mb-3" onclick="return confirm('Are you sure?')">
-                                            🗑️
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
                         <?php endforeach; ?>
+
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -209,6 +164,25 @@
     </div>
 </div>
 
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmActionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalTitle">Confirm Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmModalMessage">Are you sure you want to proceed?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmActionBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.querySelector('input[name="search"]');
@@ -229,6 +203,42 @@ document.addEventListener('DOMContentLoaded', function() {
         searchInput.value = '';
         searchInput.value = val;
     }
+
+    // Handle confirmation modal
+    const confirmButtons = document.querySelectorAll('.confirm-action-btn');
+    
+    confirmButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const title = this.dataset.title;
+            const message = this.dataset.message;
+            const url = this.dataset.url;
+            const action = this.dataset.action;
+            
+            // Update modal content
+            document.getElementById('confirmModalTitle').textContent = title;
+            document.getElementById('confirmModalMessage').textContent = message;
+            
+            // Update confirm button style based on action
+            const confirmBtn = document.getElementById('confirmActionBtn');
+            confirmBtn.className = 'btn'; // Reset classes
+            
+            if (action === 'delete') {
+                confirmBtn.classList.add('btn-danger');
+                confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+            } else if (action === 'block') {
+                confirmBtn.classList.add('btn-warning');
+                confirmBtn.innerHTML = '<i class="fas fa-ban"></i> Block';
+            } else {
+                confirmBtn.classList.add('btn-primary');
+                confirmBtn.innerHTML = 'Confirm';
+            }
+            
+            // Set the action URL
+            confirmBtn.onclick = function() {
+                window.location.href = url;
+            };
+        });
+    });
 });
 </script>
 

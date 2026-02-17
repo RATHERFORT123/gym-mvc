@@ -2,7 +2,6 @@
 
 class Database
 {
-    private static $instance = null;
     private static $pdo = null;
 
     private function __construct() {}
@@ -11,7 +10,7 @@ class Database
     {
         if (self::$pdo === null) {
 
-            // 1️⃣ Connect WITHOUT database
+            // 1️⃣ Connect without DB
             $pdo = new PDO(
                 "mysql:host=" . DB_HOST,
                 DB_USER,
@@ -19,10 +18,10 @@ class Database
                 [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
             );
 
-            // 2️⃣ Create database if not exists
+            // 2️⃣ Create DB
             $pdo->exec("CREATE DATABASE IF NOT EXISTS " . DB_NAME);
 
-            // 3️⃣ Connect WITH database
+            // 3️⃣ Connect with DB
             self::$pdo = new PDO(
                 "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME,
                 DB_USER,
@@ -30,10 +29,10 @@ class Database
                 [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
             );
 
-            // 4️⃣ Create tables & migrations
+            // 4️⃣ Tables + migrations
             self::createTables();
 
-            // 5️⃣ Create default admin
+            // 5️⃣ Admin seed
             self::createAdmin();
         }
 
@@ -42,10 +41,8 @@ class Database
 
     private static function createTables()
     {
-        // ===============================
-        // 🧱 BASE TABLE CREATION
-        // ===============================
         $sql = "
+
         CREATE TABLE IF NOT EXISTS users (
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(100),
@@ -54,37 +51,40 @@ class Database
             role ENUM('admin','user','faculty') DEFAULT 'user',
             is_verified BOOLEAN DEFAULT 0,
             is_active BOOLEAN DEFAULT 1,
+            is_profile_complete BOOLEAN DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         CREATE TABLE IF NOT EXISTS user_profiles (
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT NOT NULL,
-
-            -- Student fields
             first_name VARCHAR(50),
             last_name VARCHAR(50),
             mobile_number VARCHAR(15),
             college_year ENUM('1','2','3','4'),
             semester INT,
             branch VARCHAR(50),
+
+            department VARCHAR(100) NULL,
+            position VARCHAR(100) NULL,
+            subject_expert VARCHAR(150) NULL,
+            employee_code VARCHAR(50) NULL,
+
+            middle_name VARCHAR(50) NULL,
+            gender ENUM('Male', 'Female', 'Other') NULL,
+            birth_date DATE NULL,
+            blood_group VARCHAR(10) NULL,
+            bmi_index DECIMAL(5,2) NULL,
+            waist_size DECIMAL(5,2) NULL,
+
             height_cm DECIMAL(5,2),
             weight_kg DECIMAL(5,2),
             fitness_goal VARCHAR(50),
 
-            -- Faculty fields (added via migration safety below)
-            department VARCHAR(100) NULL,
-            position VARCHAR(100) NULL,
-            subject_expert VARCHAR(150) NULL,
-            qualification VARCHAR(150) NULL,
-            experience_years INT NULL,
-
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-            FOREIGN KEY (user_id)
-                REFERENCES users(id)
-                ON DELETE CASCADE
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
 
         CREATE TABLE IF NOT EXISTS user_plans (
@@ -100,52 +100,50 @@ class Database
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
 
-        CREATE TABLE IF NOT EXISTS attendance (
+        CREATE TABLE IF NOT EXISTS plans_master (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            user_id INT NOT NULL,
-            role ENUM('user','faculty') NOT NULL,
-            attendance_date DATE NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE KEY unique_attendance (user_id, attendance_date),
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            plan_key VARCHAR(10) NOT NULL UNIQUE,
+            name VARCHAR(100) NOT NULL,
+            price_user DECIMAL(10,2) NOT NULL DEFAULT 0,
+            price_faculty DECIMAL(10,2) NOT NULL DEFAULT 0,
+            price_female DECIMAL(10,2) NOT NULL DEFAULT 0,
+            duration_days INT NOT NULL DEFAULT 30,
+            upi_id VARCHAR(100) DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         CREATE TABLE IF NOT EXISTS payments (
             id INT AUTO_INCREMENT PRIMARY KEY,
 
             user_id INT NOT NULL,
-            plan_id INT NOT NULL,
-            plan_master_id INT DEFAULT NULL,
+            plan_id INT NULL,
             amount DECIMAL(10,2) NOT NULL,
 
             payment_method ENUM('upi') DEFAULT 'upi',
             upi_id VARCHAR(100) NOT NULL,
+
             payer_upi VARCHAR(100) DEFAULT NULL,
+            account_holder_name VARCHAR(100) DEFAULT NULL,
             utr_number VARCHAR(50) DEFAULT NULL,
+            transaction_date DATE DEFAULT NULL,
 
-            status ENUM('pending','verified','failed') DEFAULT 'pending',
-
+            status ENUM('pending','verified','rejected') DEFAULT 'pending',
+            declined_reason TEXT DEFAULT NULL,
+            is_read TINYINT(1) DEFAULT 0,
             paid_at DATETIME DEFAULT NULL,
             verified_at DATETIME DEFAULT NULL,
 
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-            FOREIGN KEY (user_id)
-                REFERENCES users(id)
-                ON DELETE CASCADE,
-
-            -- plan_id now references plans_master (master list of plan definitions)
-            FOREIGN KEY (plan_master_id)
-                REFERENCES plans_master(id)
-                ON DELETE CASCADE
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (plan_id) REFERENCES plans_master(id) ON DELETE SET NULL
         );
 
         CREATE TABLE IF NOT EXISTS user_subscriptions (
             id INT AUTO_INCREMENT PRIMARY KEY,
-
             user_id INT NOT NULL,
-            plan_id INT NOT NULL,
+            plan_id INT NULL,
             payment_id INT NOT NULL,
 
             start_date DATE NOT NULL,
@@ -156,127 +154,177 @@ class Database
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-            FOREIGN KEY (user_id)
-                REFERENCES users(id)
-                ON DELETE CASCADE,
-
-            -- plan_id references the master plan definitions
-            FOREIGN KEY (plan_id)
-                REFERENCES plans_master(id)
-                ON DELETE CASCADE,
-
-            FOREIGN KEY (payment_id)
-                REFERENCES payments(id)
-                ON DELETE CASCADE
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (plan_id) REFERENCES plans_master(id) ON DELETE SET NULL,
+            FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE CASCADE
         );
 
-        CREATE TABLE IF NOT EXISTS plans_master (
+        CREATE TABLE IF NOT EXISTS attendance (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            plan_key VARCHAR(10) NOT NULL UNIQUE,
-            name VARCHAR(100) NOT NULL,
-            price_user DECIMAL(10,2) NOT NULL DEFAULT 0,
-            price_faculty DECIMAL(10,2) NOT NULL DEFAULT 0,
-            upi_id VARCHAR(100) DEFAULT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            user_id INT NOT NULL,
+            role ENUM('user','faculty') NOT NULL,
+            attendance_date DATE NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY unique_attendance (user_id, attendance_date),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
 
         CREATE TABLE IF NOT EXISTS settings (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            setting_key VARCHAR(50) NOT NULL UNIQUE,
+            setting_key VARCHAR(50) UNIQUE,
             setting_value TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS events (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            description TEXT,
+            status ENUM('active', 'inactive') DEFAULT 'inactive',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         );
         ";
 
         self::$pdo->exec($sql);
 
-        // Seed settings
+        // ==========================
+        // 🔐 CONSTRAINTS & INDEXES
+        // ==========================
+
         try {
-            $stmt = self::$pdo->prepare("INSERT IGNORE INTO settings (setting_key, setting_value) VALUES (?, ?)");
-            $stmt->execute(['global_upi', defined('UPI_ID') ? UPI_ID : 'your-upi-id@bank']);
+            self::$pdo->exec("ALTER TABLE payments ADD UNIQUE KEY unique_utr (utr_number)");
         } catch (Exception $e) {}
 
-        // Seed default plans_master rows if not exist
         try {
-            $stmt = self::$pdo->prepare("SELECT COUNT(*) FROM plans_master WHERE plan_key = ?");
-            $defaults = [
-                ['1m','1 Month',199.00,199.00],
-                ['3m','3 Months',499.00,499.00],
-                ['6m','6 Months',899.00,899.00],
+            self::$pdo->exec("CREATE INDEX idx_payments_user ON payments(user_id)");
+            self::$pdo->exec("CREATE INDEX idx_payments_status ON payments(status)");
+        } catch (Exception $e) {}
+
+        // ==========================
+        // 🔄 MIGRATIONS (Profile Fields Update)
+        // ==========================
+        try {
+            $cols = [
+                "middle_name"  => "VARCHAR(50) NULL",
+                "gender"       => "ENUM('Male', 'Female', 'Other') NULL",
+                "birth_date"   => "DATE NULL",
+                "blood_group"  => "VARCHAR(10) NULL",
+                "bmi_index"    => "DECIMAL(5,2) NULL",
+                "waist_size"   => "DECIMAL(5,2) NULL",
+                "employee_code" => "VARCHAR(50) NULL"
             ];
-            foreach ($defaults as $d) {
-                $stmt->execute([$d[0]]);
-                if ($stmt->fetchColumn() == 0) {
-                    $ins = self::$pdo->prepare("INSERT INTO plans_master (plan_key, name, price_user, price_faculty, upi_id) VALUES (?, ?, ?, ?, ?)");
-                    $ins->execute([$d[0], $d[1], $d[2], $d[3], defined('UPI_ID') ? UPI_ID : null]);
-                }
+
+            foreach ($cols as $col => $type) {
+                try {
+                    self::$pdo->exec("ALTER TABLE user_profiles ADD COLUMN $col $type");
+                } catch (Exception $e) { /* Column might already exist */ }
             }
 
+            // Remove old fields
+            try {
+                self::$pdo->exec("ALTER TABLE user_profiles DROP COLUMN qualification");
+            } catch (Exception $e) {}
+            try {
+                self::$pdo->exec("ALTER TABLE user_profiles MODIFY COLUMN gender ENUM('Male', 'Female', 'Other') NULL");
+            } catch (Exception $e) {}
 
-        } catch (Exception $e) {
-            // ignore seeding errors
-        }
+            // Add duration_days to plans_master
+            try {
+                self::$pdo->exec("ALTER TABLE plans_master ADD COLUMN duration_days INT NOT NULL DEFAULT 30");
+            } catch (Exception $e) { /* Column might already exist */ }
 
-         // ===============================
-        // 🔁 SAFE MIGRATIONS (ALTER TABLE)
-        // ===============================
+            // Add price_female to plans_master
+            try {
+                self::$pdo->exec("ALTER TABLE plans_master ADD COLUMN price_female DECIMAL(10,2) NOT NULL DEFAULT 0 AFTER price_faculty");
+            } catch (Exception $e) { /* Column might already exist */ }
 
-        // Faculty columns (for existing databases)
+            // Add is_read to payments
+            try {
+                self::$pdo->exec("ALTER TABLE payments ADD COLUMN is_read TINYINT(1) DEFAULT 0 AFTER status");
+            } catch (Exception $e) { /* Column might already exist */ }
+
+            // Add declined_reason to payments
+            try {
+                self::$pdo->exec("ALTER TABLE payments ADD COLUMN declined_reason TEXT DEFAULT NULL AFTER status");
+            } catch (Exception $e) { /* Column might already exist */ }
+
+            // Add account_holder_name to payments
+            try {
+                self::$pdo->exec("ALTER TABLE payments ADD COLUMN account_holder_name VARCHAR(100) DEFAULT NULL AFTER payer_upi");
+            } catch (Exception $e) { /* Column might already exist */ }
+
+            // Add transaction_date to payments
+            try {
+                self::$pdo->exec("ALTER TABLE payments ADD COLUMN transaction_date DATE DEFAULT NULL AFTER utr_number");
+            } catch (Exception $e) { /* Column might already exist */ }
+
+            // Add is_profile_complete to users
+            try {
+                self::$pdo->exec("ALTER TABLE users ADD COLUMN is_profile_complete BOOLEAN DEFAULT 0 AFTER is_active");
+            } catch (Exception $e) { /* Column might already exist */ }
+
+            // Add profile pic to users
+            try {
+                self::$pdo->exec("ALTER TABLE users ADD COLUMN profile_photo VARCHAR(255) DEFAULT NULL AFTER role");
+            } catch (Exception $e) { /* Column might already exist */ }
+
+            // Add user login id to users
+            try {
+                self::$pdo->exec("ALTER TABLE users ADD COLUMN user_login_id VARCHAR(255) DEFAULT NULL AFTER id");
+            } catch (Exception $e) { /* Column might already exist */ }
+
+            // Auto-update existing users who have profile data
+            try {
+                self::$pdo->exec("UPDATE users u JOIN user_profiles up ON u.id = up.user_id SET u.is_profile_complete = 1");
+            } catch (Exception $e) {}
+
+        } catch (Exception $e) {}
+
+        // ==========================
+        // 🌱 SEED DATA
+        // ==========================
+
         try {
-            self::$pdo->exec("
-                ALTER TABLE user_profiles
-                ADD COLUMN department VARCHAR(100) NULL AFTER branch,
-                ADD COLUMN position VARCHAR(100) NULL AFTER department,
-                ADD COLUMN subject_expert VARCHAR(150) NULL AFTER position,
-                ADD COLUMN qualification VARCHAR(150) NULL AFTER subject_expert,
-                ADD COLUMN experience_years INT NULL AFTER qualification
-            ");
-        } catch (Exception $e) {
-            // Columns already exist → ignore
-        }
-
-        // Ensure users.is_active exists (legacy safety) 
-        // // Update: Add is_active column if not exists
-        try {
-            self::$pdo->exec("
-                ALTER TABLE users
-                ADD COLUMN is_active BOOLEAN DEFAULT 1 AFTER is_verified
-            ");
-        } catch (Exception $e) {
-            // Column already exists → ignore
-        }
-
-        // Update: Add plan_master_id to payments if not exists (backfill schema for older installs)
-        try {
-            self::$pdo->exec("ALTER TABLE payments ADD COLUMN plan_master_id INT DEFAULT NULL AFTER plan_id");
-        } catch (Exception $e) {
-            // likely exists
-        }
+            $stmt = self::$pdo->prepare(
+                "INSERT IGNORE INTO settings (setting_key, setting_value) VALUES (?, ?)"
+            );
+            $stmt->execute(['global_upi', defined('UPI_ID') ? UPI_ID : 'your-upi@bank']);
+        } catch (Exception $e) {}
 
         try {
-            self::$pdo->exec("ALTER TABLE payments ADD CONSTRAINT fk_payments_plan_master FOREIGN KEY (plan_master_id) REFERENCES plans_master(id) ON DELETE CASCADE");
-        } catch (Exception $e) {
-            // constraint likely exists or cannot be created
-        }
+            $defaults = [
+                ['1m','1 Month',199,199,199],
+                ['3m','3 Months',499,499,499],
+                ['6m','6 Months',899,899,899],
+            ];
+
+            // Only seed if table is empty to allow deletions
+            $stmt = self::$pdo->query("SELECT COUNT(*) FROM plans_master");
+            if ($stmt->fetchColumn() == 0) {
+                foreach ($defaults as $d) {
+                    $ins = self::$pdo->prepare(
+                        "INSERT INTO plans_master (plan_key,name,price_user,price_faculty,price_female,upi_id)
+                         VALUES (?,?,?,?,?,?)"
+                    );
+                    $ins->execute([$d[0],$d[1],$d[2],$d[3],$d[4],defined('UPI_ID') ? UPI_ID : null]);
+                }
+            }
+        } catch (Exception $e) {}
     }
 
     private static function createAdmin()
     {
-        $stmt = self::$pdo->prepare(
-            "SELECT COUNT(*) FROM users WHERE role = 'admin'"
-        );
-        $stmt->execute();
-
+        $stmt = self::$pdo->query("SELECT COUNT(*) FROM users WHERE role='admin'");
         if ($stmt->fetchColumn() == 0) {
 
             $password = password_hash('admin123', PASSWORD_DEFAULT);
 
-            $insert = self::$pdo->prepare(
-                "INSERT INTO users (name, email, password, role)
-                 VALUES (?, ?, ?, ?)"
+            $ins = self::$pdo->prepare(
+                "INSERT INTO users (name,email,password,role)
+                 VALUES (?,?,?,?)"
             );
-
-            $insert->execute([
+            $ins->execute([
                 'Admin',
                 'admin@gym.com',
                 $password,

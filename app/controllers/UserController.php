@@ -5,16 +5,6 @@ class UserController extends Controller
     public function dashboard()
     {
         Auth::role(['user', 'faculty']);
-        
-        $showProfileAlert = false;
-        
-        // Check if profile is incomplete and not dismissed
-        if (!isset($_SESSION['dismiss_profile_alert'])) {
-            $userModel = $this->model('User');
-            if (!$userModel->isProfileComplete($_SESSION['user_id'])) {
-                $showProfileAlert = true;
-            }
-        }
 
         // Fetch current subscription and days left
         $planModel = $this->model('Plan');
@@ -26,23 +16,39 @@ class UserController extends Controller
             $daysLeft = (int) floor(($end - $today) / 86400);
         }
 
+        // Fetch active events
+        $eventModel = $this->model('Event');
+        $activeEvents = $eventModel->getActive();
+
+        // Fetch latest payment status for declined notification
+        $paymentModel = $this->model('Payment');
+        $lastPayment = $paymentModel->getLatestPayment($_SESSION['user_id']);
+        
+        $paymentDeclined = false;
+        $declinedReason = '';
+        
+        if ($lastPayment && $lastPayment['status'] === 'rejected') {
+            $paymentDeclined = true;
+            $declinedReason = $lastPayment['declined_reason'];
+        }
+
         $this->view('user/dashboard', [
-            'showProfileAlert' => $showProfileAlert,
             'currentPlan' => $currentPlan,
-            'daysLeft' => $daysLeft
+            'daysLeft' => $daysLeft,
+            'activeEvents' => $activeEvents,
+            'paymentDeclined' => $paymentDeclined,
+            'declinedReason' => $declinedReason
         ]);
     }
 
     public function dismissAlert() 
     {
-        $_SESSION['dismiss_profile_alert'] = true;
-        
-        // Return JSON for AJAX or redirect
+        // Keep this endpoint for UX (hides modal immediately) but do NOT persist dismissal
         if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
-             echo json_encode(['status' => 'success']);
-             exit;
+            echo json_encode(['status' => 'success']);
+            exit;
         }
-        
+
         header("Location: " . BASE_URL . "/user/dashboard");
         exit;
     }

@@ -29,13 +29,16 @@ class AuthController extends Controller
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['role']    = $user['role'];
 
-                // ✅ Role-based redirect
-                if ($user['role'] === 'admin') {
+                // ✅ Role-based redirect or intended URL
+                if (isset($_SESSION['intended_url'])) {
+                    $redirectUrl = $_SESSION['intended_url'];
+                    unset($_SESSION['intended_url']); // Clear it after use
+                    header("Location: " . $redirectUrl);
+                } elseif ($user['role'] === 'admin') {
                     header("Location: " . BASE_URL . "/admin/dashboard");
                 } else {
                     // user + faculty
                     header("Location: " . BASE_URL . "/user/dashboard");
-
                 }
                 exit;
             }
@@ -58,6 +61,19 @@ class AuthController extends Controller
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+            $name = $_POST['name'] ?? '';
+            // Validate Name (Alphabets only)
+            if (!preg_match("/^[a-zA-Z\s]+$/", $name)) {
+                $this->view('auth/register', ['error' => 'Name must contain only alphabets']);
+                return;
+            }
+
+            // Check if email already exists
+            if ($this->model('User')->findByEmail($_POST['email'] ?? '')) {
+                $this->view('auth/register', ['error' => 'Email already registered. Please login.']);
+                return;
+            }
 
             $data = [
                 'name'     => $_POST['name'] ?? '',
@@ -87,6 +103,13 @@ class AuthController extends Controller
     }
     public function sendOtp()
 {
+    // Check if email already exists
+    $userModel = $this->model('User');
+    if ($userModel->findByEmail($_POST['email'] ?? '')) {
+        $this->view('auth/register', ['error' => 'Email already registered. Please login.']);
+        return;
+    }
+
     $otp = rand(100000, 999999);
 
     $_SESSION['register'] = [
@@ -117,13 +140,17 @@ public function verifyOtp()
         && time() <= $_SESSION['register']['expiry']) {
 
         $userModel = $this->model('User');
-        $userModel->create([
-            'name' => $_SESSION['register']['name'],
-            'email' => $_SESSION['register']['email'],
-            'password' => $_SESSION['register']['password'],
-            'role' => $_SESSION['register']['role'],
-            'is_verified' => 1
-        ]);
+$userLoginId = $userModel->generateLoginId();
+
+$userModel->create([
+    'name' => $_SESSION['register']['name'],
+    'email' => $_SESSION['register']['email'],
+    'password' => $_SESSION['register']['password'],
+    'role' => $_SESSION['register']['role'],
+    'is_verified' => 1,
+    'user_login_id' => $userLoginId
+]);
+
 
         // Auto-login
         $newUser = $userModel->findByEmail($_SESSION['register']['email']);
@@ -131,6 +158,30 @@ public function verifyOtp()
             $_SESSION['user_id'] = $newUser['id'];
             $_SESSION['role'] = $newUser['role'];
         }
+
+        // Send Welcome Email
+        $userName = $_SESSION['register']['name'] ?? 'Guest';
+        $userEmail = $_SESSION['register']['email'];
+        $subject = "Welcome to SGSIT Gym!";
+        $message = "
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+                <h2 style='color: #0d6efd;'>Welcome to the Family, $userName!</h2>
+                <p>We are thrilled to have you join the <strong>SGSIT Gym</strong>. Your account has been successfully verified and created.</p>
+                <p>You can now log in to:</p>
+                <ul style='color: #444;'>
+                    <li>Access your personalized Diet and Workout plans.</li>
+                    <li>Mark your daily attendance via QR code.</li>
+                    <li>Track your fitness progress and membership details.</li>
+                </ul>
+                <div style='text-align: center; margin: 30px 0;'>
+                    <a href='" . BASE_URL . "/user/dashboard' style='background-color: #0d6efd; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Go to My Dashboard</a>
+                </div>
+                <p style='color: #666;'>We're excited to be part of your fitness journey!</p>
+                <hr style='border: 0; border-top: 1px solid #eee; margin-top: 30px;'>
+                <p style='font-size: 0.8rem; color: #999; text-align: center;'>SGSIT Gym Management System</p>
+            </div>
+        ";
+        Mailer::send($userEmail, $subject, $message);
 
         unset($_SESSION['register'], $_SESSION['otp_sent']);
 

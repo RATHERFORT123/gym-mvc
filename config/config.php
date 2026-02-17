@@ -1,17 +1,23 @@
 <?php
 define('BASE_URL', '/gym-mvc');
+// define('BASE_URL', 'https://lightslategrey-parrot-894780.hostingersite.com');
+
 
 
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'gym_db');
+define('DB_NAME', 'u629724066_root');
 define('DB_USER', 'root');
+// define('DB_USER', 'u629724066_root');
+
 define('DB_PASS', '');
+// define('DB_PASS', '##INclude12345');
+
 
 
 define('SMTP_HOST', 'smtp.gmail.com');
-define('SMTP_USER', 'rathorechetan114@gmail.com');
-define('SMTP_PASS', 'isfv qxqj tbzv ozyc');
+define('SMTP_USER', 'gynasiumlegend@gmail.com');
+define('SMTP_PASS', 'bgev tijv pmnd wgms');
 define('SMTP_PORT', 587);
 
-// UPI ID used for manual QR payments (replace with your real UPI ID)
+
 define('UPI_ID', 'your-upi-id@bank');

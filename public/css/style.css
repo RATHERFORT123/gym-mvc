@@ -278,3 +278,9 @@ footer {
     border-radius: 8px;
     background: #fff;
 }
+
+.btn-mini {
+    padding: 9px 9px;
+    font-size: 12px;
+    line-height: 1.2;
+}

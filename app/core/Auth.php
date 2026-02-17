@@ -8,6 +8,8 @@ class Auth
     public static function check()
     {
         if (!isset($_SESSION['user_id'])) {
+            // Save the intended URL for redirect after login
+            $_SESSION['intended_url'] = $_SERVER['REQUEST_URI'];
             header("Location: " . BASE_URL . "/auth/login");
             exit;
         }

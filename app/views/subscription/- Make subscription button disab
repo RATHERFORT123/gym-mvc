@@ -1,0 +1,29 @@
+ - Make subscription button disable, until plan is about to expire.
+ - Make payment editable(utr no and payer id only)
+ - Add enrollment number field in table and profile update form.
+
+UI changes
+- Remove alert and replace by toastr when attendance is made.
+- Add toastr when profile is updated, logged in.
+- Add gif images of workout and diet.
+
+
+ 
+
+
+WEB NAME CHANGE
+
+
+FACULTY 
+GENDER , BIRTH DATE , blood group , bmi index , weit size , 
+POST  - POSITION 
+proffesser , assosiate professer , assistend profes , assistend great 3 , great 4 , tecnician , LDC  UDC , INSTRUCTER , JUNIAR INSTUCTER ,ATTENDENT , LAB TACNICIEAN , ENGENEER , SUB ENGNEER 
+
+QUALIFICATION Remove , EXPRIENCE REMOVE , 
+
+
+USER 
+MIDDIL NAME , blood group , bmi index CALCULATE , weit size ,
+
+
+ATTENDENTS USING QR CODE

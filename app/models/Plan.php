@@ -2,12 +2,6 @@
 
 class Plan extends Model
 {
-    public function getUserPlan($userId)
-    {
-        $stmt = $this->db->prepare("SELECT * FROM user_plans WHERE user_id = ? ORDER BY created_at DESC LIMIT 1");
-        $stmt->execute([$userId]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
 
     public function createPlan($data)
     {
@@ -44,32 +38,36 @@ class Plan extends Model
         return $stmt->execute([$priceUser, $priceFaculty, $planKey]);
     }
 
-    public function updateMasterDetails($planKey, $priceUser, $priceFaculty, $upiId)
+    public function updateMasterDetails($planKey, $priceUser, $priceFaculty, $upiId, $priceFemale = 0)
     {
-        $stmt = $this->db->prepare("UPDATE plans_master SET price_user = ?, price_faculty = ?, upi_id = ? WHERE plan_key = ?");
-        return $stmt->execute([$priceUser, $priceFaculty, $upiId, $planKey]);
+        $stmt = $this->db->prepare("UPDATE plans_master SET price_user = ?, price_faculty = ?, price_female = ?, upi_id = ? WHERE plan_key = ?");
+        return $stmt->execute([$priceUser, $priceFaculty, $priceFemale, $upiId, $planKey]);
     }
 
     public function addMasterPlan($data)
     {
-        $stmt = $this->db->prepare("INSERT INTO plans_master (plan_key, name, price_user, price_faculty, upi_id) VALUES (?, ?, ?, ?, ?)");
+        $stmt = $this->db->prepare("INSERT INTO plans_master (plan_key, name, price_user, price_faculty, price_female, duration_days, upi_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
         return $stmt->execute([
             $data['plan_key'],
             $data['name'],
             $data['price_user'],
             $data['price_faculty'],
+            $data['price_female'] ?? 0,
+            $data['duration_days'] ?? 30,
             $data['upi_id'] ?? null
         ]);
     }
 
     public function updateMasterFull($id, $data)
     {
-        $stmt = $this->db->prepare("UPDATE plans_master SET plan_key = ?, name = ?, price_user = ?, price_faculty = ?, upi_id = ? WHERE id = ?");
+        $stmt = $this->db->prepare("UPDATE plans_master SET plan_key = ?, name = ?, price_user = ?, price_faculty = ?, price_female = ?, duration_days = ?, upi_id = ? WHERE id = ?");
         return $stmt->execute([
             $data['plan_key'],
             $data['name'],
             $data['price_user'],
             $data['price_faculty'],
+            $data['price_female'] ?? 0,
+            $data['duration_days'] ?? 30,
             $data['upi_id'] ?? null,
             $id
         ]);
@@ -92,14 +90,47 @@ class Plan extends Model
     public function getCurrentSubscription($userId)
     {
         $stmt = $this->db->prepare(
-            "SELECT us.*, pm.name AS plan_name, pm.plan_key
-             FROM user_subscriptions us
-             JOIN plans_master pm ON pm.id = COALESCE(us.plan_master_id, us.plan_id)
-             WHERE us.user_id = ? AND us.status = 'active'
-             ORDER BY us.end_date DESC
-             LIMIT 1"
+            "SELECT 
+                us.*,
+                pm.name AS plan_name,
+                pm.plan_key,
+                p.status AS payment_status,
+                p.status
+            FROM user_subscriptions us
+            JOIN plans_master pm ON pm.id = us.plan_id
+            JOIN payments p ON p.id = us.payment_id
+            WHERE us.user_id = ?
+            AND us.status = 'active'
+            ORDER BY us.end_date DESC
+            LIMIT 1"
         );
         $stmt->execute([$userId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getUserPlan($userId)
+    {
+        $stmt = $this->db->prepare("SELECT * FROM user_plans WHERE user_id = ? ORDER BY created_at DESC LIMIT 1");
+        $stmt->execute([$userId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getExpiringSubscriptions($days)
+    {
+        $targetDate = date('Y-m-d', strtotime("+$days days"));
+        $stmt = $this->db->prepare(
+            "SELECT 
+                us.*, 
+                u.name,
+                u.email,
+                pm.name AS plan_name
+            FROM user_subscriptions us
+            JOIN users u ON u.id = us.user_id
+            JOIN plans_master pm ON pm.id = us.plan_id
+            WHERE us.end_date = ?
+            AND us.status = 'active'"
+        );
+        $stmt->execute([$targetDate]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

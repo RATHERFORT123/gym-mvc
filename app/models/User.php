@@ -9,11 +9,11 @@ class User extends Model
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function create($data)
+public function create($data)
 {
     $stmt = $this->db->prepare(
-        "INSERT INTO users (name,email,password,role,is_verified)
-         VALUES (?,?,?,?,?)"
+        "INSERT INTO users (name, email, password, role, is_verified, user_login_id)
+         VALUES (?, ?, ?, ?, ?, ?)"
     );
 
     return $stmt->execute([
@@ -21,9 +21,11 @@ class User extends Model
         $data['email'],
         $data['password'],
         $data['role'],
-        1
+        1,
+        $data['user_login_id']
     ]);
 }
+
 
     public function updatePassword($email, $newPassword)
     {
@@ -33,19 +35,35 @@ class User extends Model
             $email
         ]);
     }
+public function getProfile($userId)
+{
+    $stmt = $this->db->prepare("
+        SELECT 
+            u.email,
+            u.profile_photo,
+            u.user_login_id,
+            u.role AS user_role,
+            p.*
+        FROM users u 
+        LEFT JOIN user_profiles p ON u.id = p.user_id 
+        WHERE u.id = ?
+    ");
+    $stmt->execute([$userId]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
 
-    public function getProfile($userId)
-    {
-        $stmt = $this->db->prepare("
-            SELECT u.email, p.* 
-            FROM users u 
-            LEFT JOIN user_profiles p ON u.id = p.user_id 
-            WHERE u.id = ?
-        ");
-        $stmt->execute([$userId]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-public function updateProfile($userId, $data, $role)
+    // public function getProfile($userId)
+    // {
+    //     $stmt = $this->db->prepare("
+    //         SELECT u.email, p.* 
+    //         FROM users u 
+    //         LEFT JOIN user_profiles p ON u.id = p.user_id 
+    //         WHERE u.id = ?
+    //     ");
+    //     $stmt->execute([$userId]);
+    //     return $stmt->fetch(PDO::FETCH_ASSOC);
+    // }
+    public function updateProfile($userId, $data, $role)
 {
     $stmt = $this->db->prepare("SELECT id FROM user_profiles WHERE user_id = ?");
     $stmt->execute([$userId]);
@@ -67,16 +85,22 @@ public function updateProfile($userId, $data, $role)
                         department = ?,
                         position = ?,
                         subject_expert = ?,
-                        qualification = ?,
-                        experience_years = ?
+                        middle_name = ?,
+                        gender = ?,
+                        birth_date = ?,
+                        blood_group = ?,
+                        bmi_index = ?,
+                        waist_size = ?,
+                        employee_code = ?
                     WHERE user_id = ?";
         } else {
             $sql = "INSERT INTO user_profiles
                     (first_name, last_name, mobile_number,
                      height_cm, weight_kg, fitness_goal,
                      department, position, subject_expert,
-                     qualification, experience_years, user_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                     middle_name, gender, birth_date, blood_group,
+                     bmi_index, waist_size, employee_code, user_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         }
 
         $params = [
@@ -89,8 +113,13 @@ public function updateProfile($userId, $data, $role)
             $data['department'] ?? null,
             $data['position'] ?? null,
             $data['subject_expert'] ?? null,
-            $data['qualification'] ?? null,
-            $data['experience_years'] ?? null,
+            $data['middle_name'] ?? null,
+            $data['gender'] ?? null,
+            $data['birth_date'] ?? null,
+            $data['blood_group'] ?? null,
+            $data['bmi_index'] ?? null,
+            $data['waist_size'] ?? null,
+            $data['employee_code'] ?? null,
             $userId
         ];
     }
@@ -105,37 +134,241 @@ public function updateProfile($userId, $data, $role)
                         first_name = ?,
                         last_name = ?,
                         mobile_number = ?,
+                        enrollment_number = ?,
                         college_year = ?,
                         semester = ?,
                         branch = ?,
                         height_cm = ?,
                         weight_kg = ?,
-                        fitness_goal = ?
+                        fitness_goal = ?,
+                        middle_name = ?,
+                        gender = ?,
+                        birth_date = ?,
+                        blood_group = ?,
+                        bmi_index = ?,
+                        waist_size = ?
                     WHERE user_id = ?";
         } else {
             $sql = "INSERT INTO user_profiles
                     (first_name, last_name, mobile_number,
+                     enrollment_number,
                      college_year, semester, branch,
-                     height_cm, weight_kg, fitness_goal, user_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                     height_cm, weight_kg, fitness_goal,
+                     middle_name, gender, birth_date, blood_group,
+                     bmi_index, waist_size, user_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         }
 
         $params = [
             $data['first_name'] ?? null,
             $data['last_name'] ?? null,
             $data['mobile_number'] ?? null,
+            $data['enrollment_number'] ?? null,
             $data['college_year'] ?? null,
             $data['semester'] ?? null,
             $data['branch'] ?? null,
             $data['height'] ?? null,
             $data['weight'] ?? null,
             $data['fitness_goal'] ?? null,
+            $data['middle_name'] ?? null,
+            $data['gender'] ?? null,
+            $data['birth_date'] ?? null,
+            $data['blood_group'] ?? null,
+            $data['bmi_index'] ?? null,
+            $data['waist_size'] ?? null,
             $userId
         ];
     }
 
     $stmt = $this->db->prepare($sql);
-    return $stmt->execute($params);
+    $result = $stmt->execute($params);
+
+    // =========================
+    // UPDATE USERS TABLE (NAME + PHOTO)
+    // =========================
+    if ($result) {
+
+        $firstName = $data['first_name'] ?? '';
+        $lastName  = $data['last_name'] ?? '';
+        $fullName  = trim($firstName . ' ' . $lastName);
+
+        if (!empty($fullName)) {
+            $this->db->prepare("UPDATE users SET name = ? WHERE id = ?")
+                     ->execute([$fullName, $userId]);
+        }
+
+        // 🔥 PROFILE PHOTO UPDATE (THIS WAS MISSING)
+        if (!empty($data['profile_photo'])) {
+            $this->db->prepare("UPDATE users SET profile_photo = ? WHERE id = ?")
+                     ->execute([$data['profile_photo'], $userId]);
+        }
+    }
+
+    return $result;
+}
+
+// public function updateProfile($userId, $data, $role)
+// {
+//     $stmt = $this->db->prepare("SELECT id FROM user_profiles WHERE user_id = ?");
+//     $stmt->execute([$userId]);
+//     $exists = $stmt->fetch();
+
+//     // =========================
+//     // FACULTY PROFILE
+//     // =========================
+//     if ($role === 'faculty') {
+
+//         if ($exists) {
+//             $sql = "UPDATE user_profiles SET
+//                         first_name = ?,
+//                         last_name = ?,
+//                         mobile_number = ?,
+//                         height_cm = ?,
+//                         weight_kg = ?,
+//                         fitness_goal = ?,
+//                         department = ?,
+//                         position = ?,
+//                         subject_expert = ?,
+//                         middle_name = ?,
+//                         gender = ?,
+//                         birth_date = ?,
+//                         blood_group = ?,
+//                         bmi_index = ?,
+//                         waist_size = ?,
+//                         employee_code = ?
+//                     WHERE user_id = ?";
+//         } else {
+//             $sql = "INSERT INTO user_profiles
+//                     (first_name, last_name, mobile_number,
+//                      height_cm, weight_kg, fitness_goal,
+//                      department, position, subject_expert,
+//                      middle_name, gender, birth_date, blood_group,
+//                      bmi_index, waist_size, employee_code, user_id)
+//                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+//         }
+
+//         $params = [
+//             $data['first_name'] ?? null,
+//             $data['last_name'] ?? null,
+//             $data['mobile_number'] ?? null,
+//             $data['height'] ?? null,
+//             $data['weight'] ?? null,
+//             $data['fitness_goal'] ?? null,
+//             $data['department'] ?? null,
+//             $data['position'] ?? null,
+//             $data['subject_expert'] ?? null,
+//             $data['middle_name'] ?? null,
+//             $data['gender'] ?? null,
+//             $data['birth_date'] ?? null,
+//             $data['blood_group'] ?? null,
+//             $data['bmi_index'] ?? null,
+//             $data['waist_size'] ?? null,
+//             $data['employee_code'] ?? null,
+//             $userId
+//         ];
+//     }
+
+//     // =========================
+//     // USER / STUDENT PROFILE
+//     // =========================
+//     else {
+
+//         if ($exists) {
+//             $sql = "UPDATE user_profiles SET
+//                         first_name = ?,
+//                         last_name = ?,
+//                         mobile_number = ?,
+//                         enrollment_number = ?,
+//                         college_year = ?,
+//                         semester = ?,
+//                         branch = ?,
+//                         height_cm = ?,
+//                         weight_kg = ?,
+//                         fitness_goal = ?,
+//                         middle_name = ?,
+//                         gender = ?,
+//                         birth_date = ?,
+//                         blood_group = ?,
+//                         bmi_index = ?,
+//                         waist_size = ?
+//                     WHERE user_id = ?";
+//         } else {
+//             $sql = "INSERT INTO user_profiles
+//                     (first_name, last_name, mobile_number,
+//                      enrollment_number,
+//                      college_year, semester, branch,
+//                      height_cm, weight_kg, fitness_goal,
+//                      middle_name, gender, birth_date, blood_group,
+//                      bmi_index, waist_size, user_id)
+//                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+//         }
+
+//         $params = [
+//             $data['first_name'] ?? null,
+//             $data['last_name'] ?? null,
+//             $data['mobile_number'] ?? null,
+//             $data['enrollment_number'] ?? null,
+//             $data['college_year'] ?? null,
+//             $data['semester'] ?? null,
+//             $data['branch'] ?? null,
+//             $data['height'] ?? null,
+//             $data['weight'] ?? null,
+//             $data['fitness_goal'] ?? null,
+//             $data['middle_name'] ?? null,
+//             $data['gender'] ?? null,
+//             $data['birth_date'] ?? null,
+//             $data['blood_group'] ?? null,
+//             $data['bmi_index'] ?? null,
+//             $data['waist_size'] ?? null,
+//             $userId
+//         ];
+//     }
+
+//     $stmt = $this->db->prepare($sql);
+//     $result = $stmt->execute($params);
+
+//     // Sync updated name to the main users table
+//     if ($result) {
+//         $firstName = $data['first_name'] ?? '';
+//         $lastName = $data['last_name'] ?? '';
+//         $fullName = trim($firstName . ' ' . $lastName);
+//         if (!empty($fullName)) {
+//             $this->db->prepare("UPDATE users SET name = ? WHERE id = ?")->execute([$fullName, $userId]);
+//         }
+//     }
+
+//     return $result;
+// }
+public function generateLoginId()
+{
+    $year  = date('y');  // 25
+    $month = date('m');  // 02
+
+    $prefix = "GL-$year-$month-";
+
+    $pdo = Database::getInstance();
+
+    // Get last login ID for current month
+    $stmt = $pdo->prepare("
+        SELECT user_login_id 
+        FROM users 
+        WHERE user_login_id LIKE ? 
+        ORDER BY user_login_id DESC 
+        LIMIT 1
+    ");
+    $stmt->execute([$prefix . '%']);
+    $lastId = $stmt->fetchColumn();
+
+    if ($lastId) {
+        $lastNumber = (int) substr($lastId, -4);
+        $newNumber = $lastNumber + 1;
+    } else {
+        $newNumber = 1;
+    }
+
+    $sequence = str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+
+    return $prefix . $sequence;
 }
 
    public function getUsersByRole($role)
@@ -191,7 +424,7 @@ public function updateProfile($userId, $data, $role)
                    p.fitness_goal, p.height_cm, p.weight_kg 
             FROM users u 
             LEFT JOIN user_profiles p ON u.id = p.user_id 
-            WHERE u.role != 'admin'
+            WHERE u.role = 'user'
         ";
 
         $params = [];
@@ -218,7 +451,54 @@ public function updateProfile($userId, $data, $role)
 
     public function getTotalUserCount($search = '')
     {
-        $sql = "SELECT COUNT(*) FROM users u WHERE u.role != 'admin'";
+        $sql = "SELECT COUNT(*) FROM users u WHERE u.role = 'user'";
+        $params = [];
+        
+        if (!empty($search)) {
+            $sql .= " AND (u.name LIKE ? OR u.email LIKE ?)";
+            $params = ["%$search%", "%$search%"];
+        }
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchColumn();
+    }
+
+    public function getPaginatedFaculty($limit, $offset, $search = '')
+    {
+        $sql = "
+            SELECT u.id, u.name, u.email, u.role, u.is_active, 
+                   p.fitness_goal, p.height_cm, p.weight_kg, p.department 
+            FROM users u 
+            LEFT JOIN user_profiles p ON u.id = p.user_id 
+            WHERE u.role = 'faculty'
+        ";
+
+        $params = [];
+        if (!empty($search)) {
+            $sql .= " AND (u.name LIKE ? OR u.email LIKE ?)";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+        }
+
+        $sql .= " ORDER BY u.created_at DESC LIMIT ? OFFSET ?";
+        
+        $stmt = $this->db->prepare($sql);
+        
+        $paramCount = count($params);
+        for ($i = 0; $i < $paramCount; $i++) {
+            $stmt->bindValue($i + 1, $params[$i]);
+        }
+        
+        $stmt->bindValue($paramCount + 1, (int)$limit, PDO::PARAM_INT);
+        $stmt->bindValue($paramCount + 2, (int)$offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getTotalFacultyCount($search = '')
+    {
+        $sql = "SELECT COUNT(*) FROM users u WHERE u.role = 'faculty'";
         $params = [];
         
         if (!empty($search)) {
@@ -242,14 +522,25 @@ public function updateProfile($userId, $data, $role)
         $stmt = $this->db->prepare("UPDATE users SET is_active = ? WHERE id = ?");
         return $stmt->execute([$status, $id]);
     }
-public function getById($id)
+    public function getById($id)
 {
     $stmt = $this->db->prepare(
-        "SELECT id, name, email, role FROM users WHERE id = ?"
+        "SELECT id, name, email, role, profile_photo 
+         FROM users 
+         WHERE id = ?"
     );
     $stmt->execute([$id]);
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
+
+// public function getById($id)
+// {
+//     $stmt = $this->db->prepare(
+//         "SELECT id, name, email, role FROM users WHERE id = ?"
+//     );
+//     $stmt->execute([$id]);
+//     return $stmt->fetch(PDO::FETCH_ASSOC);
+// }
 public function countByRole($role)
 {
     $stmt = $this->db->prepare(

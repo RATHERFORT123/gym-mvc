@@ -19,6 +19,18 @@ class Attendance extends Model
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function getByUserAndMonth($userId, $month)
+    {
+        $stmt = $this->db->prepare("
+            SELECT attendance_date
+            FROM attendance
+            WHERE user_id = ?
+            AND DATE_FORMAT(attendance_date, '%Y-%m') = ?
+        ");
+
+        $stmt->execute([$userId, $month]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
     public function markPresent($userId, $role, $date)
     {
